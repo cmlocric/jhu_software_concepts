@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<h1>Chris Locricchio</h1>
+<h5>Staff Data Scientist at General Motors</h5>
+
+<div class="row align-items-start">
+    <div class="col-md-8">
+        <p>
+            Local to the metro Detroit Michigan area, Chris is an experienced analytics professional with more than twelve years of success
+            delivering analyitcal and data science solutions. He pairs his deep intellectual curiosity with strong technical expertise to help
+            organizations make smarter, data-informed decisions.
+            <br><br>
+            Chris holds both a BS and an MS in Mathematics, and plans to pursue
+            an additional MS in AI through Johns Hopkins University to further augment his technical skillset. Outside of his academic
+            and professional life, Chris enjoys boxing, going on bike rides with his wife Erica, learning to play the piano,
+            and playing chess.
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        <img src="{{ url_for('static', filename='Chris LinkedIn.jpg') }}"
+             alt="Chris Locricchio"
+             style="width: 325px; height: 325px; object-fit: cover;">
+    </div>
+</div>
+{% endblock %}
