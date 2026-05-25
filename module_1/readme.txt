@@ -1,1 +1,1 @@
-Instructions on how o run the website
+Instructions on how to run the website
