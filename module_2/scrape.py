@@ -476,9 +476,9 @@ if __name__ == "__main__":
     records = scrape_survey_records(
         start_url="https://www.thegradcafe.com/survey",
         max_pages=47934,
-        max_records=20,
+        max_records=100,
         headless=True,
-        pause_seconds=1,
+        pause_seconds=.1,
     )
 
     with open("module_2/applicant_data.json", "w", encoding="utf-8") as f:
