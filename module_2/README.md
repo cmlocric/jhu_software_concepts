@@ -21,6 +21,10 @@ So the overall workflow is:
 - urllib3 for direct requests to applicant detail pages
 - BeautifulSoup for HTML parsing throughout
 
+## Compliance
+
+https://www.thegradcafe.com/robots.txt was reviewed for compliance. Content-Signal: search=yes,ai-train=no allows us to scrape for our purposes. We are not on the disallowed list of banned agents.
+
 ## Browser and Driver Setup
 
 Selenium was configured with Chrome using `webdriver.Chrome(options=options)`.
