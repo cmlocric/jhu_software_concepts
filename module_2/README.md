@@ -1,5 +1,6 @@
-Chris Locricchio F0B0B2
-Module 2 - Web Scraping - 5/31/2026
+## Chris Locricchio F0B0B2
+
+## Module 2 - Web Scraping - 5/31/2026
 
 ## Approach
 
