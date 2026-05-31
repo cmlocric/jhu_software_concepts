@@ -476,13 +476,12 @@ if __name__ == "__main__":
     records = scrape_survey_records(
         start_url="https://www.thegradcafe.com/survey",
         max_pages=47934,
-        max_records=100,
+        max_records=1000,
         headless=True,
         pause_seconds=.1,
     )
 
-    with open("module_2/applicant_data.json", "w", encoding="utf-8") as f:
+    with open("applicant_data.json", "w", encoding="utf-8") as f:
         json.dump(records, f, indent=2, ensure_ascii=False)
 
-    print(f"Saved {len(records)} records to module_2/applicant_data.json")
-    
+    print(f"Saved {len(records)} records to applicant_data.json")
