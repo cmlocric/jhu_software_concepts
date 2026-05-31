@@ -1,11 +1,12 @@
-import re
 import json
+import os
+import re
 import time
-import urllib3
-from bs4 import BeautifulSoup
 from datetime import datetime
 from urllib.parse import urljoin
 
+import urllib3
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -26,20 +27,27 @@ PROXY = "http://naproxy.gm.com:8080"
 # HTTP client setup for non-browser requests
 # ---------------------------------------------------------------------
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-http = urllib3.ProxyManager(
-    PROXY,
-    cert_reqs="CERT_NONE",
-    assert_hostname=False
-)
+
+if PROXY:
+    http = urllib3.ProxyManager(
+        PROXY,
+        cert_reqs="CERT_NONE",
+        assert_hostname=False,
+    )
+else:
+    http = urllib3.PoolManager(
+        cert_reqs="CERT_NONE",
+        assert_hostname=False,
+    )
 
 # ---------------------------------------------------------------------
 # Text cleanup helpers
 # ---------------------------------------------------------------------
 def clean(text: str) -> str:
-    return re.sub(r"\s+", " ", text).strip()
+    return re.sub(r"\s+", " ", text or "").strip()
 
-def extract(pattern: str, text: str, flags=0, default=""):
-    match = re.search(pattern, text, flags)
+def extract(pattern: str, text: str, flags=0, default="") -> str:
+    match = re.search(pattern, text or "", flags)
     return clean(match.group(1)) if match else default
 
 def coalesce(*values):
@@ -58,19 +66,29 @@ def empty_if_not_provided(value: str) -> str:
 # Normalization helpers
 # ---------------------------------------------------------------------
 def normalize_country(value: str) -> str:
+    if not value:
+        return ""
     value_lower = value.lower()
+
     if "international" in value_lower:
         return "International"
-    if any(x in value_lower for x in ["american", "usa", "u.s.", "domestic", "us"]):
+
+    if any(x in value_lower for x in ["american", "usa", "u.s.", "domestic", " us ", "us"]):
         return "American"
+
     return value
 
 def normalize_degree(value: str) -> str:
+    if not value:
+        return ""
     value_lower = value.lower()
+
     if "master" in value_lower:
         return "Masters"
+
     if "phd" in value_lower or "doctor" in value_lower:
         return "PhD"
+
     return value
 
 def normalize_slash_date(date_str: str) -> str:
@@ -79,12 +97,14 @@ def normalize_slash_date(date_str: str) -> str:
     """
     if not date_str:
         return ""
+
     for fmt in ("%d/%m/%Y", "%m/%d/%Y"):
         try:
             dt = datetime.strptime(date_str, fmt)
             return dt.strftime("%B %d, %Y")
         except ValueError:
             pass
+
     return date_str
 
 def normalize_month_day_year(date_str: str) -> str:
@@ -93,13 +113,42 @@ def normalize_month_day_year(date_str: str) -> str:
     """
     if not date_str:
         return ""
+
     for fmt in ("%B %d, %Y", "%b %d, %Y"):
         try:
             dt = datetime.strptime(date_str, fmt)
             return dt.strftime("%B %d, %Y")
         except ValueError:
             pass
+
     return date_str
+
+# ---------------------------------------------------------------------
+# HTTP fetch helper
+# ---------------------------------------------------------------------
+def fetch_html(url: str, retries: int = 3, backoff_seconds: float = 1.5) -> str:
+    last_error = None
+
+    for attempt in range(1, retries + 1):
+        try:
+            response = http.request(
+                "GET",
+                url,
+                headers={"User-Agent": "Mozilla/5.0"},
+                timeout=urllib3.Timeout(connect=10.0, read=30.0),
+            )
+
+            if response.status != 200:
+                raise RuntimeError(f"HTTP {response.status} for {url}")
+
+            return response.data.decode("utf-8", errors="ignore")
+
+        except Exception as e:
+            last_error = e
+            if attempt < retries:
+                time.sleep(backoff_seconds * attempt)
+
+    raise last_error
 
 # ---------------------------------------------------------------------
 # Selenium browser construction
@@ -138,77 +187,73 @@ def get_anchor_container_text(a_tag) -> str:
     for _ in range(6):
         if node is None:
             break
+
         text = clean(node.get_text(" ", strip=True))
         text_lower = text.lower()
+
         if any(marker in text_lower for marker in decision_markers) or re.search(term_pattern, text, re.IGNORECASE):
             return text
+
         node = node.parent
 
-    return clean(a_tag.parent.get_text(" ", strip=True)) if a_tag.parent else clean(a_tag.get_text(" ", strip=True))
+    if a_tag.parent:
+        return clean(a_tag.parent.get_text(" ", strip=True))
+
+    return clean(a_tag.get_text(" ", strip=True))
 
 def parse_survey_summary_block(block_text: str, url: str) -> dict:
-    """
-    Parse metadata visible directly on the survey listing row/card.
-
-    This is where we get:
-    - Date of Information Added to Grad Cafe
-    - Accepted / Rejected short decision dates
-    - Semester and Year of Program Start
-    - International / American Student
-    - Sometimes GRE / GPA values
-    """
     added_on = extract(
         r"\b([A-Z][a-z]+ \d{1,2}, \d{4})\b",
         block_text,
-        re.IGNORECASE
+        re.IGNORECASE,
     )
 
     status = extract(
         r"\b(Accepted|Rejected|Interview|Wait listed)\s+on\b",
         block_text,
-        re.IGNORECASE
+        re.IGNORECASE,
     )
 
     decision_short_date = extract(
         r"\b(?:Accepted|Rejected|Interview|Wait listed)\s+on\s+([A-Z][a-z]{2,8}\s+\d{1,2})\b",
         block_text,
-        re.IGNORECASE
+        re.IGNORECASE,
     )
 
     term = extract(
         r"\b((?:Fall|Spring|Summer|Winter)\s+\d{4})\b",
         block_text,
-        re.IGNORECASE
+        re.IGNORECASE,
     )
 
     student_type = extract(
         r"\b(International|American|Domestic|US|USA|Other)\b",
         block_text,
-        re.IGNORECASE
+        re.IGNORECASE,
     )
 
     gre_score = extract(
         r"\bGRE\s+(\d+(?:\.\d+)?)\b",
         block_text,
-        re.IGNORECASE
+        re.IGNORECASE,
     )
 
     gre_v_score = extract(
         r"\bGRE V\s+(\d+(?:\.\d+)?)\b",
         block_text,
-        re.IGNORECASE
+        re.IGNORECASE,
     )
 
     gre_aw = extract(
         r"\bGRE AW\s+(\d+(?:\.\d+)?)\b",
         block_text,
-        re.IGNORECASE
+        re.IGNORECASE,
     )
 
     gpa = extract(
         r"\bGPA\s+(\d+(?:\.\d+)?)\b",
         block_text,
-        re.IGNORECASE
+        re.IGNORECASE,
     )
 
     accepted_date = decision_short_date if status.lower() == "accepted" else ""
@@ -231,7 +276,7 @@ def parse_survey_summary_block(block_text: str, url: str) -> dict:
 
 def extract_result_entries_from_page(html: str) -> list[dict]:
     """
-    Extract unique result URLs plus any summary metadata from a rendered survey page.
+    Extract unique result URLs plus summary metadata from a rendered survey page.
     """
     soup = BeautifulSoup(html, "html.parser")
     entries = []
@@ -239,10 +284,12 @@ def extract_result_entries_from_page(html: str) -> list[dict]:
 
     for a_tag in soup.find_all("a", href=True):
         href = a_tag["href"]
+
         if not re.fullmatch(r"/result/\d+", href):
             continue
 
         full_url = urljoin(BASE_URL, href)
+
         if full_url in seen:
             continue
         seen.add(full_url)
@@ -258,8 +305,13 @@ def wait_for_results(driver: webdriver.Chrome, timeout: int = 20):
     wait.until(lambda d: "Graduate School Admission Results" in d.page_source or "/result/" in d.page_source)
     return wait
 
+def current_result_urls(driver: webdriver.Chrome) -> set[str]:
+    html = driver.page_source
+    entries = extract_result_entries_from_page(html)
+    return {entry["url"] for entry in entries}
+
 def click_next_page(driver: webdriver.Chrome, timeout: int = 20) -> bool:
-    old_html = driver.page_source
+    old_result_urls = current_result_urls(driver)
     wait = WebDriverWait(driver, timeout)
 
     next_xpaths = [
@@ -269,6 +321,7 @@ def click_next_page(driver: webdriver.Chrome, timeout: int = 20) -> bool:
 
     for xpath in next_xpaths:
         elements = driver.find_elements(By.XPATH, xpath)
+
         for el in elements:
             if not el.is_displayed():
                 continue
@@ -277,8 +330,10 @@ def click_next_page(driver: webdriver.Chrome, timeout: int = 20) -> bool:
                 driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", el)
                 time.sleep(0.5)
                 driver.execute_script("arguments[0].click();", el)
-                wait.until(lambda d: d.page_source != old_html)
+
+                wait.until(lambda d: current_result_urls(d) != old_result_urls)
                 return True
+
             except Exception:
                 continue
 
@@ -305,48 +360,47 @@ def parse_gradcafe_result_html(html: str, url: str, survey_summary: dict | None 
     notification_date_raw = extract(
         r"Notification\s+on\s+(\d{2}/\d{2}/\d{4})",
         text,
-        re.IGNORECASE
+        re.IGNORECASE,
     )
     notification_date = normalize_slash_date(notification_date_raw)
 
     gpa = extract(
         r"Undergrad GPA\s+(.*?)\s+GRE General",
         text,
-        re.IGNORECASE
+        re.IGNORECASE,
     )
     gre_score = extract(
         r"GRE General\s+(.*?)\s+GRE Verbal",
         text,
-        re.IGNORECASE
+        re.IGNORECASE,
     )
     gre_v_score = extract(
         r"GRE Verbal\s+(.*?)\s+Analytical Writing",
         text,
-        re.IGNORECASE
+        re.IGNORECASE,
     )
     gre_aw = extract(
         r"Analytical Writing\s+(.*?)(?:\s+Notes|\s+Institution Statistics|\s+Notification Date|\s+Timeline|$)",
         text,
-        re.IGNORECASE
+        re.IGNORECASE,
     )
 
     comments = extract(
         r"Notes\s+(.*?)(?:Institution Statistics|Notification Date|Timeline|Solutions|Results Submit Yours|$)",
         text,
-        re.IGNORECASE | re.DOTALL
+        re.IGNORECASE | re.DOTALL,
     )
 
-    # If the survey row did not expose accepted/rejected date, we can
-    # use the detail-page notification date as a fallback when status matches.
     accepted_date = survey_summary.get("Accepted: Acceptance Date", "")
     rejected_date = survey_summary.get("Rejected: Rejection Date", "")
 
     if not accepted_date and status.lower().startswith("accept"):
         accepted_date = notification_date
+
     if not rejected_date and status.lower().startswith("reject"):
         rejected_date = notification_date
 
-    result = {
+    return {
         "Program Name": program_name,
         "University": university,
         "Comments": comments,
@@ -374,51 +428,83 @@ def parse_gradcafe_result_html(html: str, url: str, survey_summary: dict | None 
         ),
     }
 
-    return result
-
-def parse_gradcafe_result(url: str, survey_summary: dict | None = None) -> dict:
-    response = http.request(
-        "GET",
-        url,
-        headers={"User-Agent": "Mozilla/5.0"}
-    )
-    html = response.data.decode("utf-8", errors="ignore")
+def parse_gradcafe_result(url: str, survey_summary: dict | None = None, retries: int = 3) -> dict:
+    html = fetch_html(url, retries=retries)
     return parse_gradcafe_result_html(html, url, survey_summary=survey_summary)
 
 # ---------------------------------------------------------------------
-# Multi-page survey scraping
+# Multi-page survey scraping with Selenium pagination
 # ---------------------------------------------------------------------
-def scrape_survey_entries(
+def scrape_survey_records(
     start_url: str = SURVEY_URL,
-    max_pages: int = 5,
-    max_records: int = 100,
+    target_records: int = 100,
+    max_pages: int | None = None,
     headless: bool = True,
     pause_seconds: float = 0.5,
 ) -> list[dict]:
     """
-    Walk survey pages and collect result URLs + survey-visible metadata.
+    End-to-end scrape:
+    1. Use Selenium to paginate through survey pages
+    2. Extract result URLs + survey-row metadata
+    3. Parse detail pages immediately
+    4. Continue until target_records successful records are collected
     """
+    if target_records <= 0:
+        return []
+
     driver = build_driver(headless=headless)
-    all_entries = []
-    seen = set()
+    records = []
+    seen_urls = set()
+    page_num = 0
+    consecutive_pages_with_no_new_urls = 0
 
     try:
         driver.get(start_url)
         wait_for_results(driver)
 
-        for page_num in range(1, max_pages + 1):
+        while len(records) < target_records:
+            page_num += 1
+
+            if max_pages is not None and page_num > max_pages:
+                print(f"Reached max_pages={max_pages}")
+                break
+
             html = driver.page_source
             page_entries = extract_result_entries_from_page(html)
+            new_entries = [entry for entry in page_entries if entry["url"] not in seen_urls]
 
-            for entry in page_entries:
+            print(
+                f"[page {page_num}] found {len(page_entries)} entries, "
+                f"{len(new_entries)} new, "
+                f"{len(records)}/{target_records} records collected"
+            )
+
+            if not new_entries:
+                consecutive_pages_with_no_new_urls += 1
+            else:
+                consecutive_pages_with_no_new_urls = 0
+
+            if consecutive_pages_with_no_new_urls >= 3:
+                print("Stopping after 3 consecutive pages with no new URLs.")
+                break
+
+            for entry in new_entries:
+                if len(records) >= target_records:
+                    break
+
                 url = entry["url"]
-                if url not in seen:
-                    seen.add(url)
-                    all_entries.append(entry)
+                seen_urls.add(url)
 
-            print(f"[page {page_num}] collected {len(page_entries)} entries ({len(all_entries)} total)")
+                try:
+                    record = parse_gradcafe_result(url, survey_summary=entry, retries=3)
+                    records.append(record)
+                    print(f"[{len(records)}/{target_records}] parsed {url}")
+                except Exception as e:
+                    print(f"[skip] failed {url}: {e}")
 
-            if len(all_entries) >= max_records:
+                time.sleep(pause_seconds)
+
+            if len(records) >= target_records:
                 break
 
             moved = click_next_page(driver)
@@ -431,42 +517,6 @@ def scrape_survey_entries(
     finally:
         driver.quit()
 
-    return all_entries[:max_records]
-
-def scrape_survey_records(
-    start_url: str = SURVEY_URL,
-    max_pages: int = 5,
-    max_records: int = 100,
-    headless: bool = True,
-    pause_seconds: float = 0.5,
-) -> list[dict]:
-    """
-    End-to-end scrape:
-    1. Collect summary metadata from survey rows
-    2. Visit each detail page
-    3. Merge survey-row + detail-page fields
-    """
-    survey_entries = scrape_survey_entries(
-        start_url=start_url,
-        max_pages=max_pages,
-        max_records=max_records,
-        headless=headless,
-        pause_seconds=pause_seconds,
-    )
-
-    records = []
-
-    for i, entry in enumerate(survey_entries, start=1):
-        url = entry["url"]
-        try:
-            record = parse_gradcafe_result(url, survey_summary=entry)
-            records.append(record)
-            print(f"[{i}/{len(survey_entries)}] parsed {url}")
-        except Exception as e:
-            print(f"[{i}/{len(survey_entries)}] failed {url}: {e}")
-
-        time.sleep(pause_seconds)
-
     return records
 
 # ---------------------------------------------------------------------
@@ -474,14 +524,17 @@ def scrape_survey_records(
 # ---------------------------------------------------------------------
 if __name__ == "__main__":
     records = scrape_survey_records(
-        start_url="https://www.thegradcafe.com/survey",
-        max_pages=47934,
-        max_records=10,
+        start_url=SURVEY_URL,
+        target_records=500,
+        max_pages=None,
         headless=True,
-        pause_seconds=.1,
+        pause_seconds=0.2,  
     )
 
-    with open("json_files/applicant_data.json", "w", encoding="utf-8") as f:
+    os.makedirs("json_files", exist_ok=True)
+
+    output_path = "json_files/applicant_data.json"
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(records, f, indent=2, ensure_ascii=False)
 
-    print(f"Saved {len(records)} records to json_files/applicant_data.json")
+    print(f"Saved {len(records)} records to {output_path}")
