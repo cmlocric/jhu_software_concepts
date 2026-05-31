@@ -95,8 +95,8 @@ def run_clean(
 
 if __name__ == "__main__":
     run_clean(
-    input_path=r"C:\Users\hz98yb\Training_Files\jhu_software_concepts\module_2\applicant_data.json",
-    output_path=r"C:\Users\hz98yb\Training_Files\jhu_software_concepts\module_2\llm_extend_applicant_data.json",
+    input_path=r"C:\Users\hz98yb\Training_Files\jhu_software_concepts\module_2\json_files\applicant_data.json",
+    output_path=r"C:\Users\hz98yb\Training_Files\jhu_software_concepts\module_2\json_files\llm_extend_applicant_data.json",
     workers=1,
     batch_size=50
 
