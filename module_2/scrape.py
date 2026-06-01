@@ -440,7 +440,7 @@ def scrape_survey_records(
     target_records: int = 100,
     max_pages: int | None = None,
     headless: bool = True,
-    pause_seconds: float = 0.5,
+    pause_seconds: float = 1,
 ) -> list[dict]:
     """
     End-to-end scrape:
@@ -506,10 +506,18 @@ def scrape_survey_records(
 
             if len(records) >= target_records:
                 break
-
+            
+            #First pass failed on page 766, so added retry logic and page refresh before giving up on next page click
             moved = click_next_page(driver)
             if not moved:
-                print("No more pages found.")
+                print("Next page click failed; refreshing and retrying once...")
+                time.sleep(5)
+                driver.refresh()
+                wait_for_results(driver, timeout=30)
+                moved = click_next_page(driver)
+
+            if not moved:
+                print("Stopping after repeated next-page failures.")
                 break
 
             time.sleep(pause_seconds)
@@ -525,10 +533,10 @@ def scrape_survey_records(
 if __name__ == "__main__":
     records = scrape_survey_records(
         start_url=SURVEY_URL,
-        target_records=500,
+        target_records=30000,
         max_pages=None,
         headless=True,
-        pause_seconds=0.2,  
+        pause_seconds=1,  
     )
 
     os.makedirs("json_files", exist_ok=True)
