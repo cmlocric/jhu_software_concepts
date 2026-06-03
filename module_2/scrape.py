@@ -11,6 +11,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import TimeoutException
 
 # ---------------------------------------------------------------------
 # Base site configuration
@@ -442,13 +443,6 @@ def scrape_survey_records(
     headless: bool = True,
     pause_seconds: float = 1,
 ) -> list[dict]:
-    """
-    End-to-end scrape:
-    1. Use Selenium to paginate through survey pages
-    2. Extract result URLs + survey-row metadata
-    3. Parse detail pages immediately
-    4. Continue until target_records successful records are collected
-    """
     if target_records <= 0:
         return []
 
@@ -506,15 +500,28 @@ def scrape_survey_records(
 
             if len(records) >= target_records:
                 break
-            
-            #First pass failed on page 766, so added retry logic and page refresh before giving up on next page click
+
             moved = click_next_page(driver)
+            #First full run failed at page 766, adding to handle occasional next-page click failures 
+            # by refreshing and retrying once before giving up on pagination.
             if not moved:
                 print("Next page click failed; refreshing and retrying once...")
                 time.sleep(5)
-                driver.refresh()
-                wait_for_results(driver, timeout=30)
-                moved = click_next_page(driver)
+
+                try:
+                    driver.refresh()
+                    wait_for_results(driver, timeout=30)
+                    moved = click_next_page(driver)
+                except TimeoutException:
+                    print("Refresh timed out; page did not return to survey results.")
+                    print("Current URL:", driver.current_url)
+                    print("Title:", driver.title)
+
+                    os.makedirs("debug", exist_ok=True)
+                    with open(f"debug/page_{page_num}_timeout.html", "w", encoding="utf-8") as f:
+                        f.write(driver.page_source)
+
+                    break
 
             if not moved:
                 print("Stopping after repeated next-page failures.")
