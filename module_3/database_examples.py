@@ -35,3 +35,9 @@ with connection.cursor() as cur:
 
 cur.close()
 connection.close()
+
+# Open a cursor to perform database operations
+with connection.cursor() as cur:
+
+    cur.execute('DROP TABLE IF EXISTS courses;')
+    
