@@ -4,7 +4,7 @@
   <h1>{% block title %} Course {% endblock %}</h1>
   {% for course in courses %}
     <div class='course'>
-      <h3>#{ course[0] } - {{ course[1] }} with {{ course[2] }}</h3>
+      <h3>#{{ course[0] }} - {{ course[1] }} with {{ course[2] }}</h3>
       <i><p>Room: {{ course[3] }}</p></i>
     </div>
   {% endfor %}

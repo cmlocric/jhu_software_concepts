@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %} {% endblock %}— JHU Course List</title>
+    <title>{% block title %} {% endblock %} - JHU Course List</title>
     <style>
         nav a {
             color: #607d8b;
@@ -26,6 +26,7 @@
 <body>
     <nav>
         <a href="{{ url_for('index') }}">JHU Course List</a>
+        <a href="{{ url_for('create') }}">Add New Course</a>
     </nav>
     <hr>
     <div class="content">
