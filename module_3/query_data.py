@@ -107,7 +107,7 @@ question_query_dict = {
             );""",
         
      #Question/Query 9
-    '9) Do you numbers for question 8 change if you use LLM Generated Fields (rather than your downloaded fields)?':
+    '9) Do your numbers for question 8 change if you use LLM Generated Fields (rather than your downloaded fields)?':
 
        """WITH CTE_LLM AS (
        
