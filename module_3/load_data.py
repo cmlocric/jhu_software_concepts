@@ -1,4 +1,4 @@
-# This script reads a JSON file and loads its contents into a PostgreSQL database.
+# This script reads a JSON or JSONL file and loads its contents into a PostgreSQL database.
 # ========================================================================================
 # Start sever and connect to database using psql command line tool -bash
 #"/c/Program Files/PostgreSQL/18/bin/pg_ctl.exe" start -D "C:\PostgreSQL\18\data"
@@ -9,7 +9,10 @@ import json
 import psycopg
 from datetime import datetime
 
-#DB connection parameters
+# Set to True to load LLM-extended data, False for raw data
+llm = True
+
+# DB connection parameters
 DB_CONFIG = {
     "host": "localhost",
     "port": 5432,
@@ -17,11 +20,15 @@ DB_CONFIG = {
     "user": "postgres"
 }
 
-#File path and table name
-JSON_FILE = r"C:\Users\hz98yb\Training_Files\jhu_software_concepts\module_3\module_2\json_files\llm_extend_applicant_data.json"
-TABLE_NAME = "applicants"
+# File path and table name
+if llm:
+    JSON_FILE = r"C:\Users\hz98yb\Training_Files\jhu_software_concepts\module_3\module_2\json_files\llm_extend_applicant_data_run.jsonl"
+    TABLE_NAME = "applicants"
+else:
+    JSON_FILE = r"C:\Users\hz98yb\Training_Files\jhu_software_concepts\module_3\module_2\json_files\applicant_data.json"
+    TABLE_NAME = "applicants_raw"
 
-#Stripping out non-UTF-8 characters from JSON data to avoid encoding issues when inserting into WIN1252 encoded PostgreSQL.
+# Stripping out non-UTF-8 characters from JSON data to avoid encoding issues when inserting into WIN1252 encoded PostgreSQL.
 def clean_obj(obj):
     if isinstance(obj, dict):
         return {k: clean_obj(v) for k, v in obj.items()}
@@ -47,37 +54,95 @@ def parse_date(value):
     except ValueError:
         return None
 
+def normalize_records(parsed):
+    # Top-level JSON array
+    if isinstance(parsed, list):
+        return [clean_obj(row) for row in parsed if isinstance(row, dict)]
+
+    # Top-level JSON object
+    if isinstance(parsed, dict):
+        # Common pattern: {"rows": [...]}
+        if "rows" in parsed and isinstance(parsed["rows"], list):
+            return [clean_obj(row) for row in parsed["rows"] if isinstance(row, dict)]
+
+        # If exactly one value in the dict is a list, assume that's the records container
+        list_values = [v for v in parsed.values() if isinstance(v, list)]
+        if len(list_values) == 1:
+            return [clean_obj(row) for row in list_values[0] if isinstance(row, dict)]
+
+        # Otherwise treat as a single record
+        return [clean_obj(parsed)]
+
+    raise TypeError("JSON must be a dict or list of dicts")
+
+def read_json_or_jsonl(file_path):
+    # First try reading as regular JSON
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read().strip()
+
+    if not content:
+        return []
+
+    try:
+        parsed = json.loads(content)
+        print("Detected format: regular JSON")
+        return normalize_records(parsed)
+    except json.JSONDecodeError:
+        pass
+
+    # Fall back to JSONL
+    print("Detected format: JSONL")
+    data = []
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        for line_number, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line:
+                continue
+
+            try:
+                parsed_line = json.loads(line)
+
+                if isinstance(parsed_line, dict):
+                    data.append(clean_obj(parsed_line))
+                elif isinstance(parsed_line, list):
+                    data.extend(clean_obj(row) for row in parsed_line if isinstance(row, dict))
+                else:
+                    print(f"Skipping non-dict JSON value on line {line_number}")
+
+            except json.JSONDecodeError as e:
+                print(f"Skipping invalid JSON on line {line_number}: {e}")
+
+    return data
+
+def pick(row, *keys):
+    for key in keys:
+        if key in row and row[key] not in (None, ""):
+            return row[key]
+    return None
+    
 def load_json_to_postgres():
-    # Read JSON file
-    with open(JSON_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    # Read JSON / JSONL file
+    data = read_json_or_jsonl(JSON_FILE)
 
-    print("Top-level JSON type:", type(data).__name__)
-
-    # Normalize single object -> list
-    if isinstance(data, dict):
-        if "rows" in data and isinstance(data["rows"], list):
-            data = [clean_obj(row) for row in data["rows"]]
-        else:
-            data = [clean_obj(data)]
-    elif isinstance(data, list):
-        data = [clean_obj(row) for row in data]
-    else:
-        raise TypeError("JSON must be a dict or list of dicts")
-
-    print(len(data), "records after cleaning.")
+    print("Top-level normalized type:", type(data).__name__)
+    print("Record count:", len(data))
     print("First record keys:", list(data[0].keys()) if data else [])
 
-    #Test on subset or full file:
+    if not data:
+        print("No valid records found. Nothing inserted.")
+        return
+
+    # Test on subset or full file:
     limit = len(data)
     data = data[:limit]
 
     # Connect and insert
     with psycopg.connect(**DB_CONFIG) as connection:
-
         with connection.cursor() as cur:
             # Create table if needed
             cur.execute(f"""
+            
                 CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
                     p_id int GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
                     program text,
@@ -101,23 +166,25 @@ def load_json_to_postgres():
             # Insert rows
             rows_to_insert = [
                 (
-                    row.get("Program Name") or None,
-                    row.get("Comments") or None,
-                    parse_date(row.get("Date of Information Added to Grad Cafe")),
-                    row.get("URL link to applicant entry") or None,
-                    row.get("Applicant Status") or None,
-                    row.get("Semester and Year of Program Start") or None,
-                    row.get("International / American Student") or None,
-                    parse_float(row.get("GPA")),
-                    parse_float(row.get("GRE Score")),
-                    parse_float(row.get("GRE V Score")),
-                    parse_float(row.get("GRE AW")),
-                    row.get("Masters or PhD") or None,
-                    row.get("llm-generated-program") or None,
-                    row.get("llm-generated-university") or None
+                    pick(row, "Program Name", "program_name", "program"),
+                    pick(row, "Comments", "comments"),
+                    parse_date(pick(row, "Date of Information Added to Grad Cafe", "date_added", "date")),
+                    pick(row, "URL link to applicant entry", "url", "url_link"),
+                    pick(row, "Applicant Status", "status"),
+                    pick(row, "Semester and Year of Program Start", "term", "program_start"),
+                    pick(row, "International / American Student", "US/International", "us_or_international", "student_type"),
+                    parse_float(pick(row, "GPA", "gpa")),
+                    parse_float(pick(row, "GRE Score", "GRE", "gre", "gre_score")),
+                    parse_float(pick(row, "GRE V Score", "GRE V", "gre_v", "gre_v_score")),
+                    parse_float(pick(row, "GRE AW", "gre_aw")),
+                    pick(row, "Masters or PhD", "Degree", "degree"),
+                    pick(row, "llm-generated-program", "llm_generated_program"),
+                    pick(row, "llm-generated-university", "llm_generated_university")
                 )
                 for row in data
             ]
+
+            print("Rows prepared for insert:", len(rows_to_insert))
 
             cur.executemany(
                 f"""
@@ -137,19 +204,15 @@ def load_json_to_postgres():
                     llm_generated_program,
                     llm_generated_university
                 )
+                -- Not worried about sql_injection here; no user inputs
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 rows_to_insert
             )
 
-        #Commit changes
         connection.commit()
 
-        #Close connection
-        cur.close()
-        connection.close()
-
-    print(f"Inserted {len(data)} rows into {TABLE_NAME}")
+    print(f"Inserted {len(rows_to_insert)} rows into {TABLE_NAME}")
 
 if __name__ == "__main__":
     load_json_to_postgres()
