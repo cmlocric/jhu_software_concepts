@@ -34,18 +34,19 @@ def execute_query(connection, query):
 
     return answer
 
+#Pair question with query in a dictonary
 question_query_dict = {
     #Question/Query 1
     '1) How many entries do you have in your database who have applied for Fall 2026?': 
 
-    """SELECT COUNT(*) 
+    """SELECT 'Applicant Count:', COUNT(*)
     FROM public.applicants 
     WHERE term = 'Fall 2026';""",
 
     #Question/Query 2
     '2) What percentage of entries are from international students (not American or Other) (to two decimal places)?':
 
-    """SELECT ROUND(COUNT(*) / (SELECT COUNT(*) FROM public.applicants)::DECIMAL * 100.00,2) AS percentage_international
+    """SELECT 'Percent International:', ROUND(COUNT(*) / (SELECT COUNT(*) FROM public.applicants)::DECIMAL * 100.00,2) AS percentage_international
         FROM public.applicants 
         WHERE us_or_international NOT IN ('American', 'Other') 
             AND us_or_international IS NOT NULL;""",
@@ -53,16 +54,16 @@ question_query_dict = {
      #Question/Query 3
     '3) What is the average GPA, GRE, GRE V, GRE AW of applicants who provide these metrics?':
 
-    """SELECT ROUND(AVG(gpa)::numeric, 2) AS average_gpa,
-    ROUND(AVG(gre)::numeric, 2) AS average_gre,
-    ROUND(AVG(gre_v)::numeric, 2) AS average_gre_v,
-    ROUND(AVG(gre_aw)::numeric, 2) AS average_gre_aw
+    """SELECT 'Average GPA:', ROUND(AVG(gpa)::numeric, 2) AS average_gpa,
+    'Average_gre', ROUND(AVG(gre)::numeric, 2) AS average_gre,
+    'Average_gre_v', ROUND(AVG(gre_v)::numeric, 2) AS average_gre_v,
+    'Average_gre_aw', ROUND(AVG(gre_aw)::numeric, 2) AS average_gre_aw
     FROM public.applicants;""",
 
      #Question/Query 4
     '4) What is the average GPA of American students in Fall 2026?':
 
-    """SELECT ROUND(AVG(gpa)::numeric, 2) AS average_gpa
+    """SELECT 'Average GPA American:', ROUND(AVG(gpa)::numeric, 2) AS average_gpa
         FROM public.applicants
         WHERE us_or_international = 'American' AND term = 'Fall 2026';""",
 
@@ -70,21 +71,21 @@ question_query_dict = {
     '5) What percent of entries for Fall 2026 are Acceptances (to two decimal places)?':
 
     #This is better than numbers 2's approach because it doesn't require a subquery to get the total count of entries for Fall 2026. Clever 
-    """SELECT ROUND(AVG(CASE WHEN status ILIKE '%Accept%' THEN 1 ELSE 0 END)::numeric * 100, 2) AS acceptance_percentage
+    """SELECT 'Acceptance Percent:', ROUND(AVG(CASE WHEN status ILIKE '%Accept%' THEN 1 ELSE 0 END)::numeric * 100, 2) AS acceptance_percentage
         FROM public.applicants
         WHERE term = 'Fall 2026';""",
 
      #Question/Query 6
     '6) What is the average GPA of applicants who applied for Fall 2026 who are Acceptances?':
 
-    """SELECT ROUND(AVG(gpa)::numeric, 2) AS average_gpa
+    """SELECT 'Average GPA Acceptance:', ROUND(AVG(gpa)::numeric, 2) AS average_gpa
         FROM public.applicants
         WHERE term = 'Fall 2026' AND status ILIKE '%Accept%';""",
 
      #Question/Query 7
     '7) How many entries are from applicants who applied to JHU for a masters degrees in Computer Science?':
 
-    """SELECT COUNT(*) 
+    """SELECT 'JHU MS in Computer Science', COUNT(*) 
         FROM public.applicants
         WHERE program ILIKE '%Johns Hopkins University%' 
             AND degree ILIKE '%Masters%' 
@@ -93,7 +94,7 @@ question_query_dict = {
      #Question/Query 8
      '8) How many entries from 2026 are acceptances from applicants who applied to Georgetown University, MIT, Stanford University, or Carnegie Mellon University for a PhD in Computer Science?':
 
-    """SELECT COUNT(*) 
+    """SELECT '2026 Computer Science PhD Program Acceptances from Georgetown University, MIT, Stanford University, or Carnegie Mellon University:', COUNT(*) 
         FROM public.applicants
         WHERE term = 'Fall 2026' 
             AND status ILIKE '%Accept%' 
@@ -139,16 +140,16 @@ question_query_dict = {
                 program ILIKE '%Carnegie Mellon University%')
             )
 
-    SELECT CASE WHEN total_count_llm = total_count_downloaded THEN 'No' ELSE 'Yes' END AS llm_discrepancy
+    SELECT 'LLM Generated Fields change your previous answer:', CASE WHEN total_count_llm = total_count_downloaded THEN 'No' ELSE 'Yes' END AS llm_discrepancy
     FROM CTE_LLM CROSS JOIN CTE_DOWNLOADED ;""",
 
     #Question/Query 10
     '10) Among Fall 2026 applicants, how does the acceptance rate differ by applicant type (American, International, Other)?':
 
-    """SELECT us_or_international,
-    COUNT(*) AS total_applicants,
-    COUNT(*) FILTER (WHERE status ILIKE 'Accepted%') AS accepted_applicants,
-    ROUND(100.0 * COUNT(*) FILTER (WHERE status ILIKE 'Accepted%') / COUNT(*), 2) AS acceptance_rate_pct
+    """SELECT 'Fall 2026 Acceptance Rate by applicant type:', us_or_international,
+    'Total Applicants:', COUNT(*) AS total_applicants,
+    'Accepted Applicants:', COUNT(*) FILTER (WHERE status ILIKE 'Accepted%') AS accepted_applicants,
+    'Acceptance Rate:', ROUND(100.0 * COUNT(*) FILTER (WHERE status ILIKE 'Accepted%') / COUNT(*), 2) AS acceptance_rate_pct
     FROM public.applicants
     WHERE term = 'Fall 2026'
     AND us_or_international IS NOT NULL
@@ -158,7 +159,7 @@ question_query_dict = {
     #Question/Query 11
     '11) For Computer Science applicants, which universities have the most acceptances (at least 20) in the dataset when using the LLM-generated university/program fields?':
 
-    """SELECT llm_generated_university,
+    """SELECT 'Universities with at least 20 acceptances in Computer Science:', llm_generated_university,
     COUNT(*) AS acceptance_count
     FROM public.applicants
     WHERE status ILIKE 'Accept%'
@@ -170,9 +171,16 @@ question_query_dict = {
 
 }
 
-# Execute the queries and store the answers in a list
-answer_list = [execute_query(connection, query) for query in question_query_dict.values()]
+#Function to execute and store results as a module that can be imported into the Flask app to render the results on the webpage. 
+def get_all_query_results(connection):
+    try:
+        answer_list = [execute_query(connection, query) for query in question_query_dict.values()]
+        return list(zip(question_query_dict.keys(), answer_list))
+    finally:
+        connection.close()
 
-#Print the questions and answers iteratively 
-for key, answer in zip(question_query_dict.keys(), answer_list):
-    print(f"{key} Answer: {answer}\n")
+if __name__ == "__main__":
+    #Print the results of all of the queries to the console if not imported as a module
+    query_results = get_all_query_results(connection=connection)
+    for key, answer in query_results:
+        print(f"{key} Answer: {answer}\n")

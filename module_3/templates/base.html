@@ -2,16 +2,54 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %} {% endblock %} - JHU Course List</title>
+    <title>{% block title %}{% endblock %} Grad School Cafe Data Analysis</title>
     <style>
-        nav a {
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 10px 20px;
+        }
+
+        nav a.brand {
             color: #607d8b;
-            font-size: 3em;
-            margin-left: 50px;
+            font-size: 20px;
             text-decoration: none;
         }
 
-        .course {
+        .nav-buttons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 180px;
+            text-align: center;
+        }
+
+        .nav-item a {
+            background-color: #607d8b;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .nav-item a:hover {
+            background-color: #4b636e;
+        }
+
+        .nav-help {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #555;
+        }
+
+        .question {
             padding: 20px;
             margin: 10px;
             background-color: #f7f4f4;
@@ -25,12 +63,25 @@
 </head>
 <body>
     <nav>
-        <a href="{{ url_for('index') }}">JHU Course List</a>
-        <a href="{{ url_for('create') }}">Add New Course</a>
+        <a class="brand" href="{{ url_for('index') }}">Grad School Cafe Data Analysis</a>
+
+        <div class="nav-buttons">
+            <div class="nav-item">
+                <a href="{{ url_for('pull_data') }}">Pull Data</a>
+                <span class="nav-help">Import the latest applicant data into the applicants database.</span>
+            </div>
+
+            <div class="nav-item">
+                <a href="{{ url_for('update_analysis') }}">Update Analysis</a>
+                <span class="nav-help">Refresh the dashboard results using the latest database contents.</span>
+            </div>
+        </div>
     </nav>
+
     <hr>
+
     <div class="content">
-        {% block content %} {% endblock %}
+        {% block content %}{% endblock %}
     </div>
 </body>
 </html>

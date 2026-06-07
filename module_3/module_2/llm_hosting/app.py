@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Tuple
 
 from flask import Flask, jsonify, request
 from huggingface_hub import hf_hub_download
-from llama_cpp import Llama  # CPU-only by default if N_GPU_LAYERS=0
+from llama_cpp import Llama
 
 app = Flask(__name__)
 
@@ -28,17 +28,15 @@ MODEL_FILE = os.getenv(
 
 N_THREADS = int(os.getenv("N_THREADS", str(os.cpu_count() or 2)))
 N_CTX = int(os.getenv("N_CTX", "2048"))
-N_GPU_LAYERS = int(os.getenv("N_GPU_LAYERS", "0"))  # 0 → CPU-only
+N_GPU_LAYERS = int(os.getenv("N_GPU_LAYERS", "0"))
 
 CANON_UNIS_PATH = os.getenv("CANON_UNIS_PATH", "canon_universities.txt")
 CANON_PROGS_PATH = os.getenv("CANON_PROGS_PATH", "canon_programs.txt")
 
-# Precompiled, non-greedy JSON object matcher to tolerate chatter around JSON
 JSON_OBJ_RE = re.compile(r"\{.*?\}", re.DOTALL)
 
 # ---------------- Canonical lists + abbrev maps ----------------
 def _read_lines(path: str) -> List[str]:
-    """Read non-empty, stripped lines from a file (UTF-8)."""
     try:
         with open(path, "r", encoding="utf-8") as f:
             return [ln.strip() for ln in f if ln.strip()]
@@ -58,7 +56,6 @@ ABBREV_UNI: Dict[str, str] = {
 COMMON_UNI_FIXES: Dict[str, str] = {
     "McGiill University": "McGill University",
     "Mcgill University": "McGill University",
-    # Normalize 'Of' → 'of'
     "University Of British Columbia": "University of British Columbia",
 }
 
@@ -79,7 +76,7 @@ SYSTEM_PROMPT = (
     '- Expand obvious abbreviations (e.g., "McG" -> "McGill University", '
     '"UBC" -> "University of British Columbia").\n'
     "- Use Title Case for program; use official capitalization for university "
-    "names (e.g., \"University of X\").\n"
+    'names (e.g., "University of X").\n'
     '- Ensure correct spelling (e.g., "McGill", not "McGiill").\n'
     '- If university cannot be inferred, return "Unknown".\n\n'
     "Return JSON ONLY with keys:\n"
@@ -114,7 +111,6 @@ _LLM: Llama | None = None
 
 
 def _load_llm() -> Llama:
-    """Download (or reuse) the GGUF file and initialize llama.cpp."""
     global _LLM
     if _LLM is not None:
         return _LLM
@@ -137,33 +133,79 @@ def _load_llm() -> Llama:
     return _LLM
 
 
-def _split_fallback(text: str) -> Tuple[str, str]:
-    """Simple, rules-first parser if the model returns non-JSON."""
-    s = re.sub(r"\s+", " ", (text or "")).strip().strip(",")
-    parts = [p.strip() for p in re.split(r",| at | @ ", s) if p.strip()]
-    prog = parts[0] if parts else ""
-    uni = parts[1] if len(parts) > 1 else ""
+def _norm_key(key: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", str(key).lower())
 
-    # High-signal expansions
+
+def _get_row_value(row: Dict[str, Any], *aliases: str) -> str:
+    if not row:
+        return ""
+
+    normalized = {_norm_key(k): v for k, v in row.items()}
+
+    for alias in aliases:
+        value = normalized.get(_norm_key(alias))
+        if value is None:
+            continue
+        text = str(value).strip()
+        if text:
+            return text
+
+    return ""
+
+
+def _looks_like_university(text: str) -> bool:
+    t = (text or "").strip()
+    if not t:
+        return False
+
+    lowered = t.lower()
+    university_markers = (
+        "university",
+        "college",
+        "institute",
+        "school",
+        "polytechnic",
+    )
+    if any(marker in lowered for marker in university_markers):
+        return True
+
+    return any(re.fullmatch(pattern, t) for pattern in ABBREV_UNI)
+
+
+def _split_fallback(text: str) -> Tuple[str, str]:
+    s = re.sub(r"\s+", " ", (text or "")).strip().strip(",")
+    if not s:
+        return "", "Unknown"
+
+    parts = [p.strip() for p in re.split(r",|\sat\s|\s@\s", s, flags=re.IGNORECASE) if p.strip()]
+
+    if len(parts) == 1:
+        if _looks_like_university(parts[0]):
+            prog = ""
+            uni = parts[0]
+        else:
+            prog = parts[0]
+            uni = ""
+    else:
+        prog = ", ".join(parts[:-1]).strip()
+        uni = parts[-1].strip()
+
     if re.fullmatch(r"(?i)mcg(ill)?(\.)?", uni or ""):
         uni = "McGill University"
-    if re.fullmatch(
-        r"(?i)(ubc|u\.?b\.?c\.?|university of british columbia)",
-        uni or "",
-    ):
+    if re.fullmatch(r"(?i)(ubc|u\.?b\.?c\.?|university of british columbia)", uni or ""):
         uni = "University of British Columbia"
 
-    # Title-case program; normalize 'Of' → 'of' for universities
-    prog = prog.title()
+    prog = prog.title() if prog else ""
     if uni:
         uni = re.sub(r"\bOf\b", "of", uni.title())
     else:
         uni = "Unknown"
+
     return prog, uni
 
 
 def _best_match(name: str, candidates: List[str], cutoff: float = 0.86) -> str | None:
-    """Fuzzy match via difflib (lightweight, Replit-friendly)."""
     if not name or not candidates:
         return None
     matches = difflib.get_close_matches(name, candidates, n=1, cutoff=cutoff)
@@ -171,8 +213,10 @@ def _best_match(name: str, candidates: List[str], cutoff: float = 0.86) -> str |
 
 
 def _post_normalize_program(prog: str) -> str:
-    """Apply common fixes, title case, then canonical/fuzzy mapping."""
     p = (prog or "").strip()
+    if not p:
+        return ""
+
     p = COMMON_PROG_FIXES.get(p, p)
     p = p.title()
     if p in CANON_PROGS:
@@ -182,44 +226,95 @@ def _post_normalize_program(prog: str) -> str:
 
 
 def _post_normalize_university(uni: str) -> str:
-    """Expand abbreviations, apply common fixes, capitalization, and canonical map."""
     u = (uni or "").strip()
+    if not u:
+        return "Unknown"
 
-    # Abbreviations
     for pat, full in ABBREV_UNI.items():
         if re.fullmatch(pat, u):
             u = full
             break
 
-    # Common spelling fixes
     u = COMMON_UNI_FIXES.get(u, u)
+    u = re.sub(r"\bOf\b", "of", u.title())
 
-    # Normalize 'Of' → 'of'
-    if u:
-        u = re.sub(r"\bOf\b", "of", u.title())
-
-    # Canonical or fuzzy map
     if u in CANON_UNIS:
         return u
     match = _best_match(u, CANON_UNIS, cutoff=0.86)
     return match or u or "Unknown"
 
 
+def _build_program_text(row: Dict[str, Any]) -> str:
+    program = _get_row_value(
+        row,
+        "program",
+        "program_name",
+        "degree_program",
+        "degree",
+        "major",
+        "course",
+        "field_of_study",
+    )
+    university = _get_row_value(
+        row,
+        "university",
+        "university_name",
+        "school",
+        "institution",
+        "college",
+        "campus",
+    )
+    combined = _get_row_value(
+        row,
+        "program_text",
+        "raw_program",
+        "raw_text",
+        "education",
+        "input",
+        "text",
+    )
+
+    if program and university:
+        return f"{program}, {university}"
+    if combined:
+        return combined
+    return program or university
+
+
+def _extract_json_payload(text: str) -> Dict[str, Any]:
+    if not text:
+        return {}
+
+    try:
+        parsed = json.loads(text)
+        return parsed if isinstance(parsed, dict) else {}
+    except Exception:
+        pass
+
+    match = JSON_OBJ_RE.search(text)
+    if not match:
+        return {}
+
+    try:
+        parsed = json.loads(match.group(0))
+        return parsed if isinstance(parsed, dict) else {}
+    except Exception:
+        return {}
+
+
 def _call_llm(program_text: str) -> Dict[str, str]:
-    """Query the tiny LLM and return standardized fields."""
+    if not (program_text or "").strip():
+        return {
+            "standardized_program": "",
+            "standardized_university": "",
+        }
+
     llm = _load_llm()
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     for x_in, x_out in FEW_SHOTS:
-        messages.append(
-            {"role": "user", "content": json.dumps(x_in, ensure_ascii=False)}
-        )
-        messages.append(
-            {
-                "role": "assistant",
-                "content": json.dumps(x_out, ensure_ascii=False),
-            }
-        )
+        messages.append({"role": "user", "content": json.dumps(x_in, ensure_ascii=False)})
+        messages.append({"role": "assistant", "content": json.dumps(x_out, ensure_ascii=False)})
     messages.append(
         {
             "role": "user",
@@ -235,16 +330,19 @@ def _call_llm(program_text: str) -> Dict[str, str]:
     )
 
     text = (out["choices"][0]["message"]["content"] or "").strip()
-    try:
-        match = JSON_OBJ_RE.search(text)
-        obj = json.loads(match.group(0) if match else text)
-        std_prog = str(obj.get("standardized_program", "")).strip()
-        std_uni = str(obj.get("standardized_university", "")).strip()
-    except Exception:
-        std_prog, std_uni = _split_fallback(program_text)
+    obj = _extract_json_payload(text)
+
+    std_prog = str(obj.get("standardized_program", "")).strip()
+    std_uni = str(obj.get("standardized_university", "")).strip()
+
+    if not std_prog or not std_uni:
+        fallback_prog, fallback_uni = _split_fallback(program_text)
+        std_prog = std_prog or fallback_prog
+        std_uni = std_uni or fallback_uni
 
     std_prog = _post_normalize_program(std_prog)
     std_uni = _post_normalize_university(std_uni)
+
     return {
         "standardized_program": std_prog,
         "standardized_university": std_uni,
@@ -252,7 +350,6 @@ def _call_llm(program_text: str) -> Dict[str, str]:
 
 
 def _normalize_input(payload: Any) -> List[Dict[str, Any]]:
-    """Accept either a list of rows or {'rows': [...]}."""
     if isinstance(payload, list):
         return payload
     if isinstance(payload, dict) and isinstance(payload.get("rows"), list):
@@ -262,19 +359,28 @@ def _normalize_input(payload: Any) -> List[Dict[str, Any]]:
 
 @app.get("/")
 def health() -> Any:
-    """Simple liveness check."""
     return jsonify({"ok": True})
 
 
 @app.post("/standardize")
 def standardize() -> Any:
-    """Standardize rows from an HTTP request and return JSON."""
     payload = request.get_json(force=True, silent=True)
     rows = _normalize_input(payload)
 
+    if payload is None or not rows:
+        return jsonify({"rows": []})
+
     out: List[Dict[str, Any]] = []
     for row in rows:
-        program_text = (row or {}).get("program") or ""
+        row = dict(row or {})
+        program_text = _build_program_text(row)
+
+        if not program_text:
+            row["llm-generated-program"] = ""
+            row["llm-generated-university"] = ""
+            out.append(row)
+            continue
+
         result = _call_llm(program_text)
         row["llm-generated-program"] = result["standardized_program"]
         row["llm-generated-university"] = result["standardized_university"]
@@ -289,7 +395,6 @@ def _cli_process_file(
     append: bool,
     to_stdout: bool,
 ) -> None:
-    """Process a JSON file and write JSONL incrementally."""
     with open(in_path, "r", encoding="utf-8") as f:
         rows = _normalize_input(json.load(f))
 
@@ -299,14 +404,20 @@ def _cli_process_file(
         mode = "a" if append else "w"
         sink = open(out_path, mode, encoding="utf-8")
 
-    assert sink is not None  # for type-checkers
+    assert sink is not None
 
     try:
         for row in rows:
-            program_text = (row or {}).get("program") or ""
-            result = _call_llm(program_text)
-            row["llm-generated-program"] = result["standardized_program"]
-            row["llm-generated-university"] = result["standardized_university"]
+            row = dict(row or {})
+            program_text = _build_program_text(row)
+
+            if not program_text:
+                row["llm-generated-program"] = ""
+                row["llm-generated-university"] = ""
+            else:
+                result = _call_llm(program_text)
+                row["llm-generated-program"] = result["standardized_program"]
+                row["llm-generated-university"] = result["standardized_university"]
 
             json.dump(row, sink, ensure_ascii=False)
             sink.write("\n")
@@ -335,8 +446,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--out",
         default=None,
-        help="Output path for JSON Lines (ndjson). "
-        "Defaults to <input>.jsonl when --file is set.",
+        help="Output path for JSON Lines (ndjson). Defaults to <input>.jsonl when --file is set.",
     )
     parser.add_argument(
         "--append",
@@ -351,7 +461,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.serve or args.file is None:
-        port = int(os.getenv("PORT", "8000"))
+        port = int(os.getenv("PORT", "8080"))
         app.run(host="0.0.0.0", port=port, debug=False)
     else:
         _cli_process_file(

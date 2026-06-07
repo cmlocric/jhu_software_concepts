@@ -111,7 +111,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("input_path")
     parser.add_argument("output_path")
-    parser.add_argument("--base-url", default="http://127.0.0.1:8000")
+    parser.add_argument("--base-url", default="http://127.0.0.1:8080")
     parser.add_argument("--batch-size", type=int, default=50)
     parser.add_argument("--timeout", type=int, default=120)
     parser.add_argument("--max-batches", type=int, default=None)
