@@ -29,6 +29,11 @@
             max-width: 180px;
             text-align: center;
         }
+        
+        .nav-item button:disabled {
+        background-color: #90a4ae;
+        cursor: not-allowed;
+        }
 
         .nav-item a,
         .nav-item button {
@@ -87,7 +92,7 @@
             </div>
 
             <div class="nav-item">
-                <a href="{{ url_for('update_analysis') }}">Update Analysis</a>
+                <button id="update-analysis-btn" type="button">Update Analysis</button>
                 <span class="nav-help">Refresh the dashboard results using the latest database contents.</span>
             </div>
         </div>
@@ -101,48 +106,96 @@
         {% block content %}{% endblock %}
     </div>
 
-<script>
-    const pullDataBtn = document.getElementById("pull-data-btn");
-    const pullDataStatus = document.getElementById("pull-data-status");
+    <script>
+        const pullDataBtn = document.getElementById("pull-data-btn");
+        const updateAnalysisBtn = document.getElementById("update-analysis-btn");
+        const pullDataStatus = document.getElementById("pull-data-status");
 
-    if (pullDataBtn) {
-        pullDataBtn.addEventListener("click", async () => {
-            pullDataBtn.disabled = true;
-            pullDataStatus.textContent = "Running Pull Data...";
-            pullDataStatus.style.color = "#333";
+        let pullDataRunning = false;
 
-            try {
-                const response = await fetch("{{ url_for('pull_data') }}", {
-                    method: "POST"
-                });
+        function setPullDataRunning(isRunning) {
+            pullDataRunning = isRunning;
 
-                const data = await response.json();
+            if (pullDataBtn) {
+                pullDataBtn.disabled = isRunning;
+            }
 
-                if (!response.ok || !data.ok) {
-                    pullDataStatus.textContent = "Pull Data failed";
-                    pullDataStatus.style.color = "red";
-                    alert(data.error || "Unknown error");
-                    pullDataBtn.disabled = false;
+            if (updateAnalysisBtn) {
+                updateAnalysisBtn.disabled = isRunning;
+            }
+        }
+
+        if (pullDataBtn) {
+            pullDataBtn.addEventListener("click", async () => {
+                if (pullDataRunning) {
                     return;
                 }
 
-                pullDataStatus.textContent = "Pull Data completed successfully";
-                pullDataStatus.style.color = "green";
-                pullDataBtn.disabled = false;
+                setPullDataRunning(true);
+                pullDataStatus.textContent = "Running Pull Data...";
+                pullDataStatus.style.color = "#333";
 
-                setTimeout(() => {
-                    pullDataStatus.textContent = "";
-                    pullDataStatus.style.color = "#333";
-                }, 5000);
+                try {
+                    const response = await fetch("{{ url_for('pull_data') }}", {
+                        method: "POST"
+                    });
 
-            } catch (error) {
-                pullDataStatus.textContent = "Pull Data failed";
-                pullDataStatus.style.color = "red";
-                alert("Request failed: " + error);
-                pullDataBtn.disabled = false;
-            }
-        });
-    }
-</script>
+                    const data = await response.json();
+
+                    if (!response.ok || !data.ok) {
+                        pullDataStatus.textContent = "Pull Data failed";
+                        pullDataStatus.style.color = "red";
+                        alert(data.error || "Unknown error");
+                        setPullDataRunning(false);
+                        return;
+                    }
+
+                    pullDataStatus.textContent = data.message || "Pull Data completed successfully";
+                    pullDataStatus.style.color = "green";
+
+                    setTimeout(() => {
+                        pullDataStatus.textContent = "";
+                        pullDataStatus.style.color = "#333";
+                        setPullDataRunning(false);
+                    }, 5000);
+
+                } catch (error) {
+                    pullDataStatus.textContent = "Pull Data failed";
+                    pullDataStatus.style.color = "red";
+                    alert("Request failed: " + error);
+                    setPullDataRunning(false);
+                }
+            });
+        }
+
+        if (updateAnalysisBtn) {
+            updateAnalysisBtn.addEventListener("click", async () => {
+                if (pullDataRunning) {
+                    return;
+                }
+
+                updateAnalysisBtn.disabled = true;
+
+                try {
+                    const response = await fetch("{{ url_for('update_analysis') }}", {
+                        method: "POST"
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok || !data.ok) {
+                        alert(data.error || "Update Analysis failed");
+                        updateAnalysisBtn.disabled = false;
+                        return;
+                    }
+
+                    window.location.href = "/";
+                } catch (error) {
+                    alert("Request failed: " + error);
+                    updateAnalysisBtn.disabled = false;
+                }
+            });
+        }
+    </script>
 </body>
 </html>

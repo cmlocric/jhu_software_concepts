@@ -582,7 +582,7 @@ def scrape_survey_records(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", default="json_files/applicant_data_updated.json")
-    parser.add_argument("--target-records", type=int, default=100)
+    parser.add_argument("--target-records", type=int, default=1000)
     parser.add_argument("--max-pages", type=int, default=None)
     parser.add_argument("--headless", type=lambda x: x.lower() == "true", default=True)
     parser.add_argument("--pause-seconds", type=float, default=0.1)

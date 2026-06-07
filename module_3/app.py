@@ -1,10 +1,11 @@
-import psycopg
 import json
-from flask import Flask, render_template, jsonify
-import sys
 import subprocess
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
+
+import psycopg
+from flask import Flask, jsonify, render_template
 
 from query_data import get_all_query_results
 
@@ -18,11 +19,11 @@ LOAD_SCRIPT = BASE_DIR / "load_data.py"
 RAW_JSON_OUTPUT = BASE_DIR / "json_files" / "applicant_data_updated.json"
 CLEAN_JSON_OUTPUT = BASE_DIR / "json_files" / "applicant_data_updated_cleaned.json"
 WATERMARK_FILE = BASE_DIR / "json_files" / "pull_watermark.json"
-
+QUERY_SCRIPT = BASE_DIR / "query_data.py"
 def get_db_connection(dbname, user):
     connection = psycopg.connect(
         dbname=dbname,
-        user=user
+        user=user,
     )
     return connection
 
@@ -90,16 +91,12 @@ def get_latest_added_on(path: Path) -> str | None:
 
     return max(dates).strftime("%Y-%m-%d")
 
-@app.route('/')
+@app.route("/")
 def index():
     connection = get_db_connection(dbname="applicant_db", user="postgres")
     try:
         query_results = get_all_query_results(connection)
-
-        return render_template(
-            'index.html',
-            query_results=query_results
-        )
+        return render_template("index.html", query_results=query_results)
     finally:
         connection.close()
 
@@ -191,9 +188,20 @@ def pull_data():
         message="Pull Data completed successfully",
     )
 
-@app.route('/update-analysis')
+@app.post("/update-analysis")
 def update_analysis():
-    return "Update Analysis page"
+    query_result = run_python_script(QUERY_SCRIPT)
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    if query_result.returncode != 0:
+        return jsonify(
+            ok=False,
+            error=query_result.stderr or query_result.stdout or "query_data.py failed",
+        ), 500
+
+    return jsonify(
+        ok=True,
+        message="Analysis updated successfully",
+    )
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000)
