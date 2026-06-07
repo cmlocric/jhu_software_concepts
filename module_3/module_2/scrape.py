@@ -1,19 +1,21 @@
+from __future__ import annotations
+
+import argparse
 import json
 import os
 import re
 import time
-import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
+from datetime import date, datetime
 from urllib.parse import urljoin
 
 import urllib3
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException
 
 # ---------------------------------------------------------------------
 # Base site configuration
@@ -164,6 +166,34 @@ def normalize_month_day_year(date_str: str) -> str:
 
     return date_str
 
+def parse_added_on_date(value: str) -> date | None:
+    if not value:
+        return None
+
+    normalized = normalize_month_day_year(value)
+
+    for fmt in ("%B %d, %Y", "%b %d, %Y"):
+        try:
+            return datetime.strptime(normalized, fmt).date()
+        except ValueError:
+            pass
+
+    return None
+
+def parse_watermark(value: str | None) -> date | None:
+    if not value:
+        return None
+
+    for fmt in ("%Y-%m-%d", "%B %d, %Y", "%b %d, %Y"):
+        try:
+            return datetime.strptime(value, fmt).date()
+        except ValueError:
+            pass
+
+    raise ValueError(
+        f"Invalid watermark date: {value}. Use YYYY-MM-DD, e.g. 2026-06-01."
+    )
+
 # ---------------------------------------------------------------------
 # HTTP fetch helper
 # ---------------------------------------------------------------------
@@ -265,6 +295,8 @@ def get_anchor_container_text(a_tag) -> str:
 
 def parse_survey_summary_block(block_text: str, url: str) -> dict:
     added_on = extract(DATE_ADDED_RE, block_text)
+    added_on_normalized = normalize_month_day_year(added_on)
+
     status = extract(STATUS_RE, block_text)
     decision_short_date = extract(DECISION_SHORT_DATE_RE, block_text)
     term = extract(TERM_RE, block_text)
@@ -280,7 +312,7 @@ def parse_survey_summary_block(block_text: str, url: str) -> dict:
     return {
         "url": url,
         "survey_row_text": block_text,
-        "Date of Information Added to Grad Cafe": normalize_month_day_year(added_on),
+        "Date of Information Added to Grad Cafe": added_on_normalized,
         "Applicant Status": status,
         "Accepted: Acceptance Date": accepted_date,
         "Rejected: Rejection Date": rejected_date,
@@ -293,10 +325,6 @@ def parse_survey_summary_block(block_text: str, url: str) -> dict:
     }
 
 def extract_result_entries_from_page(html: str) -> list[dict]:
-    """
-    Extract unique result URLs plus summary metadata from a rendered survey page.
-    Faster than scanning every anchor on the page.
-    """
     soup = BeautifulSoup(html, "html.parser")
     entries = []
     seen = set()
@@ -328,10 +356,6 @@ def get_first_result_href(driver: webdriver.Chrome) -> str | None:
     return elements[0].get_attribute("href")
 
 def click_next_page(driver: webdriver.Chrome, timeout: int = 20) -> bool:
-    """
-    Avoid reparsing the entire page during wait polling. Just wait for the first
-    result link to change after clicking Next.
-    """
     old_first_href = get_first_result_href(driver)
     wait = WebDriverWait(driver, timeout)
 
@@ -423,9 +447,12 @@ def scrape_survey_records(
     headless: bool = True,
     pause_seconds: float = 0.0,
     max_workers: int = 8,
+    min_added_on: str | None = None,
 ) -> list[dict]:
     if target_records <= 0:
         return []
+
+    watermark_date = parse_watermark(min_added_on)
 
     driver = build_driver(headless=headless)
     seen_urls = set()
@@ -446,11 +473,34 @@ def scrape_survey_records(
 
             html = driver.page_source
             page_entries = extract_result_entries_from_page(html)
+
+            if watermark_date is not None:
+                page_dates = [
+                    parse_added_on_date(entry.get("Date of Information Added to Grad Cafe", ""))
+                    for entry in page_entries
+                ]
+                page_dates = [d for d in page_dates if d is not None]
+
+                if page_dates and max(page_dates) < watermark_date:
+                    print(
+                        f"Stopping: page {page_num} is entirely older than watermark "
+                        f"{watermark_date.isoformat()}"
+                    )
+                    break
+
             new_entries = [entry for entry in page_entries if entry["url"] not in seen_urls]
+
+            if watermark_date is not None:
+                new_entries = [
+                    entry
+                    for entry in new_entries
+                    if (parse_added_on_date(entry.get("Date of Information Added to Grad Cafe", "")) or date.min)
+                    >= watermark_date
+                ]
 
             print(
                 f"[page {page_num}] found {len(page_entries)} entries, "
-                f"{len(new_entries)} new, "
+                f"{len(new_entries)} new after watermark, "
                 f"{len(queued_entries)}/{target_records} queued"
             )
 
@@ -537,6 +587,11 @@ if __name__ == "__main__":
     parser.add_argument("--headless", type=lambda x: x.lower() == "true", default=True)
     parser.add_argument("--pause-seconds", type=float, default=0.1)
     parser.add_argument("--max-workers", type=int, default=8)
+    parser.add_argument(
+        "--min-added-on",
+        default=None,
+        help="Only scrape records added on/after this date (YYYY-MM-DD)",
+    )
     args = parser.parse_args()
 
     records = scrape_survey_records(
@@ -546,9 +601,12 @@ if __name__ == "__main__":
         headless=args.headless,
         pause_seconds=args.pause_seconds,
         max_workers=args.max_workers,
+        min_added_on=args.min_added_on,
     )
 
-    os.makedirs(os.path.dirname(args.output), exist_ok=True)
+    output_dir = os.path.dirname(args.output)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
 
     with open(args.output, "w", encoding="utf-8") as f:
         json.dump(records, f, indent=2, ensure_ascii=False)
