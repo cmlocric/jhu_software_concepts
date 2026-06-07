@@ -69,7 +69,7 @@ def save_progress(progress_path: str, last_completed_batch: int) -> None:
 def run_clean(
     input_path: str,
     output_path: str,
-    base_url: str = "http://127.0.0.1:8000",
+    base_url: str = "http://127.0.0.1:8080",
     batch_size: int = 50,
     timeout: int = 120,
     max_batches: int | None = None,

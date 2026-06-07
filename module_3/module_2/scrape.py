@@ -2,6 +2,7 @@ import json
 import os
 import re
 import time
+import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from urllib.parse import urljoin
@@ -529,19 +530,27 @@ def scrape_survey_records(
 # Script entry point
 # ---------------------------------------------------------------------
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", default="json_files/applicant_data_updated.json")
+    parser.add_argument("--target-records", type=int, default=100)
+    parser.add_argument("--max-pages", type=int, default=None)
+    parser.add_argument("--headless", type=lambda x: x.lower() == "true", default=True)
+    parser.add_argument("--pause-seconds", type=float, default=0.1)
+    parser.add_argument("--max-workers", type=int, default=8)
+    args = parser.parse_args()
+
     records = scrape_survey_records(
         start_url=SURVEY_URL,
-        target_records=100,
-        max_pages=None,
-        headless=True,
-        pause_seconds=0.1,
-        max_workers=8,
+        target_records=args.target_records,
+        max_pages=args.max_pages,
+        headless=args.headless,
+        pause_seconds=args.pause_seconds,
+        max_workers=args.max_workers,
     )
 
-    os.makedirs("json_files", exist_ok=True)
+    os.makedirs(os.path.dirname(args.output), exist_ok=True)
 
-    output_path = "json_files/applicant_data_updated.json"
-    with open(output_path, "w", encoding="utf-8") as f:
+    with open(args.output, "w", encoding="utf-8") as f:
         json.dump(records, f, indent=2, ensure_ascii=False)
 
-    print(f"Saved {len(records)} records to {output_path}")
+    print(f"Saved {len(records)} records to {args.output}")

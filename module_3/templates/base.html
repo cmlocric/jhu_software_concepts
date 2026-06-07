@@ -30,17 +30,26 @@
             text-align: center;
         }
 
-        .nav-item a {
+        .nav-item a,
+        .nav-item button {
             background-color: #607d8b;
             color: white;
             padding: 8px 14px;
             border-radius: 6px;
             text-decoration: none;
             font-size: 16px;
+            border: none;
+            cursor: pointer;
         }
 
-        .nav-item a:hover {
+        .nav-item a:hover,
+        .nav-item button:hover {
             background-color: #4b636e;
+        }
+
+        .nav-item button:disabled {
+            background-color: #90a4ae;
+            cursor: not-allowed;
         }
 
         .nav-help {
@@ -59,6 +68,12 @@
             margin-left: 50px;
             font-size: 20px;
         }
+
+        #pull-data-status {
+            margin: 10px 20px;
+            color: #333;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -67,7 +82,7 @@
 
         <div class="nav-buttons">
             <div class="nav-item">
-                <a href="{{ url_for('pull_data') }}">Pull Data</a>
+                <button id="pull-data-btn" type="button">Pull Data</button>
                 <span class="nav-help">Import the latest applicant data into the applicants database.</span>
             </div>
 
@@ -80,8 +95,54 @@
 
     <hr>
 
+    <div id="pull-data-status"></div>
+
     <div class="content">
         {% block content %}{% endblock %}
     </div>
+
+<script>
+    const pullDataBtn = document.getElementById("pull-data-btn");
+    const pullDataStatus = document.getElementById("pull-data-status");
+
+    if (pullDataBtn) {
+        pullDataBtn.addEventListener("click", async () => {
+            pullDataBtn.disabled = true;
+            pullDataStatus.textContent = "Running Pull Data...";
+            pullDataStatus.style.color = "#333";
+
+            try {
+                const response = await fetch("{{ url_for('pull_data') }}", {
+                    method: "POST"
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.ok) {
+                    pullDataStatus.textContent = "Pull Data failed";
+                    pullDataStatus.style.color = "red";
+                    alert(data.error || "Unknown error");
+                    pullDataBtn.disabled = false;
+                    return;
+                }
+
+                pullDataStatus.textContent = "Pull Data completed successfully";
+                pullDataStatus.style.color = "green";
+                pullDataBtn.disabled = false;
+
+                setTimeout(() => {
+                    pullDataStatus.textContent = "";
+                    pullDataStatus.style.color = "#333";
+                }, 5000);
+
+            } catch (error) {
+                pullDataStatus.textContent = "Pull Data failed";
+                pullDataStatus.style.color = "red";
+                alert("Request failed: " + error);
+                pullDataBtn.disabled = false;
+            }
+        });
+    }
+</script>
 </body>
 </html>
