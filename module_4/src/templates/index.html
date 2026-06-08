@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{% block title %} Analysis {% endblock %}</h1>
+  {% for question, answer in query_results %}
+  <div class="question">
+    <h3><strong>{{ question }}</strong></h3>
+    <i><p><em>Answer: {{ answer[0] }} {{ answer[1] }}</em></p></i>
+  </div>
+  {% endfor %}
+{% endblock %}
