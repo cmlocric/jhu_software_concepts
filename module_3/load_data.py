@@ -21,6 +21,7 @@ DB_CONFIG = {
 
 # File path and table name
 DEFAULT_JSON_FILE = (r"C:\Users\hz98yb\Training_Files\jhu_software_concepts\module_3\json_files\applicant_data_updated_cleaned.json")
+
 #Original Load
 #DEFAULT_JSON_FILE = (r"C:\Users\hz98yb\Training_Files\jhu_software_concepts\module_3\module_2\json_files\llm_extend_applicant_data_run.jsonl")
 
