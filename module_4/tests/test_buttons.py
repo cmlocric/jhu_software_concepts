@@ -127,6 +127,8 @@ def test_post_pull_data_returns_200_and_triggers_loader_with_scraped_rows(
 
     saved_watermarks = []
 
+    monkeypatch.setattr(app_module, "try_start_pull_data", lambda: True)
+    monkeypatch.setattr(app_module, "finish_pull_data", lambda: None)
     monkeypatch.setattr(app_module, "load_watermark", lambda: None)
     monkeypatch.setattr(app_module, "run_python_script", fake_run_python_script)
     monkeypatch.setattr(app_module, "read_json_records", fake_read_json_records)
@@ -139,7 +141,7 @@ def test_post_pull_data_returns_200_and_triggers_loader_with_scraped_rows(
 
     response = client.post("/pull-data")
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.get_data(as_text=True)
 
     payload = response.get_json()
     assert payload["ok"] is True
@@ -269,7 +271,7 @@ def test_post_pull_data_returns_409_when_busy(
 ):
     """Test that ``POST /pull-data`` is blocked while another pull runs.
 
-    This test verifies that when the server-side busy flag indicates pull-data
+    This test verifies that when the server-side busy gate indicates pull-data
     is already running, the endpoint rejects a second pull request with HTTP
     409 and does not run any scripts.
 
@@ -299,9 +301,7 @@ def test_post_pull_data_returns_409_when_busy(
         return _completed_process(returncode=0, stdout="ok", stderr="")
 
     monkeypatch.setattr(app_module, "run_python_script", fake_run_python_script)
-
-    # Force the busy gate to reject the request before any script runs.
-    monkeypatch.setattr(app_module, "pull_data_running", True, raising=False)
+    monkeypatch.setattr(app_module, "try_start_pull_data", lambda: False)
 
     response = client.post("/pull-data")
 
