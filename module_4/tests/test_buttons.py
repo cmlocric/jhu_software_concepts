@@ -11,12 +11,15 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+pytestmark = [pytest.mark.web, pytest.mark.buttons]
+
 @pytest.fixture
 def app_module():
     """Import and return the Flask app module.
 
-    This fixture provides access to the Flask application module so tests can
-    reference the app object, route helpers, and module-level constants.
+    This fixture provides access to the imported ``app`` module so tests can
+    reference the Flask application object, route helpers, and module-level
+    state used by the busy-gating logic.
 
     :return: The imported ``app`` module.
     :rtype: module
@@ -24,40 +27,17 @@ def app_module():
     return importlib.import_module("app")
 
 @pytest.fixture
-def client(app_module, monkeypatch):
-    """Create a Flask test client with database-dependent calls mocked.
+def client(app_module):
+    """Create a Flask test client.
 
-    This fixture replaces the database connection function and query helper so
-    the index route can be tested without opening a real database connection.
-    It also restores the original ``TESTING`` config value after the test to
-    prevent state leakage across tests.
+    The test client allows requests to be made against the Flask app without
+    starting a real web server.
 
     :param app_module: The imported Flask app module.
     :type app_module: module
-    :param monkeypatch: Pytest monkeypatch fixture.
-    :type monkeypatch: pytest.MonkeyPatch
     :yield: A Flask test client instance.
     :rtype: flask.testing.FlaskClient
     """
-    class DummyConnection:
-        """Minimal stand-in for a database connection object."""
-
-        def close(self):
-            """Pretend to close the connection."""
-            pass
-
-    monkeypatch.setattr(
-        app_module,
-        "get_db_connection",
-        lambda dbname, user: DummyConnection(),
-    )
-
-    monkeypatch.setattr(
-        app_module,
-        "get_all_query_results",
-        lambda connection: [("Question 1", "Answer: 42")],
-    )
-
     original_testing = app_module.app.config.get("TESTING", False)
     app_module.app.config.update(TESTING=True)
 
@@ -195,7 +175,7 @@ def test_post_update_analysis_returns_200_when_not_busy(
     """Test that ``POST /update-analysis`` succeeds when not busy.
 
     This test verifies that the update-analysis endpoint returns HTTP 200 and
-    triggers the query script when no busy-state gate is active.
+    triggers the query script when no pull-data request is in progress.
 
     :param client: Flask test client.
     :type client: flask.testing.FlaskClient
@@ -222,6 +202,7 @@ def test_post_update_analysis_returns_200_when_not_busy(
         return _completed_process(returncode=0, stdout="ok", stderr="")
 
     monkeypatch.setattr(app_module, "run_python_script", fake_run_python_script)
+    monkeypatch.setattr(app_module, "pull_data_running", False, raising=False)
 
     response = client.post("/update-analysis")
 
@@ -233,22 +214,16 @@ def test_post_update_analysis_returns_200_when_not_busy(
 
     assert calls == [(app_module.QUERY_SCRIPT, [])]
 
-@pytest.mark.xfail(
-    reason="Current app.py has no server-side busy gate; busy state only exists in base.html JavaScript."
-)
 def test_post_update_analysis_returns_409_when_pull_is_in_progress(
     client,
     app_module,
     monkeypatch,
 ):
-    """Test the expected future busy-gate behavior for ``/update-analysis``.
+    """Test that ``POST /update-analysis`` is blocked while pull-data runs.
 
-    This test documents the desired backend behavior: if a pull is already in
-    progress, the update-analysis endpoint should reject the request with HTTP
-    409 and should not run the update script.
-
-    It is marked ``xfail`` because the current implementation only disables the
-    UI in browser JavaScript and does not enforce busy state on the server.
+    This test verifies that when the server-side busy flag indicates a pull is
+    already in progress, the update-analysis endpoint rejects the request with
+    HTTP 409 and does not run the query script.
 
     :param client: Flask test client.
     :type client: flask.testing.FlaskClient
@@ -284,24 +259,19 @@ def test_post_update_analysis_returns_409_when_pull_is_in_progress(
 
     payload = response.get_json()
     assert payload["ok"] is False
+    assert "running" in payload["error"].lower()
     assert update_called is False
 
-@pytest.mark.xfail(
-    reason="Current app.py has no server-side busy gate; busy state only exists in base.html JavaScript."
-)
 def test_post_pull_data_returns_409_when_busy(
     client,
     app_module,
     monkeypatch,
 ):
-    """Test the expected future busy-gate behavior for ``/pull-data``.
+    """Test that ``POST /pull-data`` is blocked while another pull runs.
 
-    This test documents the desired backend behavior: if the app is already
-    busy running a pull, another pull request should be rejected with HTTP 409
-    and should not trigger any scripts.
-
-    It is marked ``xfail`` because the current implementation only disables the
-    buttons in the browser and does not enforce busy state in Flask.
+    This test verifies that when the server-side busy flag indicates pull-data
+    is already running, the endpoint rejects a second pull request with HTTP
+    409 and does not run any scripts.
 
     :param client: Flask test client.
     :type client: flask.testing.FlaskClient
@@ -329,6 +299,8 @@ def test_post_pull_data_returns_409_when_busy(
         return _completed_process(returncode=0, stdout="ok", stderr="")
 
     monkeypatch.setattr(app_module, "run_python_script", fake_run_python_script)
+
+    # Force the busy gate to reject the request before any script runs.
     monkeypatch.setattr(app_module, "pull_data_running", True, raising=False)
 
     response = client.post("/pull-data")
@@ -337,4 +309,5 @@ def test_post_pull_data_returns_409_when_busy(
 
     payload = response.get_json()
     assert payload["ok"] is False
+    assert "already in progress" in payload["error"].lower()
     assert pull_called is False

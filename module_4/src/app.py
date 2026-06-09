@@ -141,11 +141,25 @@ def get_latest_added_on(path: Path) -> str | None:
 
     return max(dates).strftime("%Y-%m-%d")
 
+#Update to pass formatting test
+def format_analysis_value(value):
+    if isinstance(value, float):
+        return f"{value:.2f}"
+    if isinstance(value, tuple):
+        return tuple(format_analysis_value(v) for v in value)
+    if isinstance(value, list):
+        return [format_analysis_value(v) for v in value]
+    return value
+
 @app.route("/")
 def index():
     connection = get_db_connection(dbname="applicant_db", user="postgres")
     try:
         query_results = get_all_query_results(connection)
+        query_results = [
+    (question, format_analysis_value(answer))
+    for question, answer in query_results
+]
         return render_template("index.html", query_results=query_results)
     finally:
         connection.close()

@@ -11,6 +11,8 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+pytestmark = [pytest.mark.web]
+
 @pytest.fixture
 def app_module():
     """Import and return the Flask app module.

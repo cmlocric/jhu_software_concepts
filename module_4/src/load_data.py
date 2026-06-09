@@ -202,10 +202,20 @@ def load_json_to_postgres(
                     llm_generated_university
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT DO NOTHING
                 """,
                 rows_to_insert
             )
-
+          # Used to identify duplicate records
+            cur.execute(f"""CREATE UNIQUE INDEX IF NOT EXISTS {table_name}_uniq_idx
+                ON {table_name} (
+                program,
+                date_added,
+                url,
+                status,
+                term,
+                degree) """)            
+                
         connection.commit()
 
     print(f"Inserted {len(rows_to_insert)} rows into {table_name}")
