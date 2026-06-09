@@ -1,23 +1,7 @@
 [
   {
-    "Program Name": "Johns Hopkins University Computer Science",
-    "Comments": "Admitted with funding",
-    "Date of Information Added to Grad Cafe": "January 15, 2026",
-    "URL link to applicant entry": "https://example.com/applicant/1",
-    "Applicant Status": "Accepted",
-    "Semester and Year of Program Start": "Fall 2026",
-    "International / American Student": "American",
-    "GPA": "3.91",
-    "GRE Score": "325",
-    "GRE V Score": "160",
-    "GRE AW": "4.5",
-    "Masters or PhD": "Masters",
-    "llm-generated-program": "Computer Science",
-    "llm-generated-university": "Johns Hopkins University"
-  },
-  {
     "Program Name": "MIT Computer Science",
-    "Comments": "Interviewed",
+    "Comments": "Accepted after interview",
     "Date of Information Added to Grad Cafe": "January 16, 2026",
     "URL link to applicant entry": "https://example.com/applicant/2",
     "Applicant Status": "Accepted",
@@ -30,5 +14,37 @@
     "Masters or PhD": "PhD",
     "llm-generated-program": "Computer Science",
     "llm-generated-university": "MIT"
+  },
+  {
+    "Program Name": "Stanford University Computer Science",
+    "Comments": "Waitlisted",
+    "Date of Information Added to Grad Cafe": "January 17, 2026",
+    "URL link to applicant entry": "https://example.com/applicant/3",
+    "Applicant Status": "Waitlisted",
+    "Semester and Year of Program Start": "Fall 2026",
+    "International / American Student": "American",
+    "GPA": "3.95",
+    "GRE Score": "332",
+    "GRE V Score": "165",
+    "GRE AW": "5.0",
+    "Masters or PhD": "PhD",
+    "llm-generated-program": "Computer Science",
+    "llm-generated-university": "Stanford University"
+  },
+  {
+    "Program Name": "Carnegie Mellon University Computer Science",
+    "Comments": "Accepted",
+    "Date of Information Added to Grad Cafe": "January 18, 2026",
+    "URL link to applicant entry": "https://example.com/applicant/4",
+    "Applicant Status": "Accepted",
+    "Semester and Year of Program Start": "Fall 2026",
+    "International / American Student": "International",
+    "GPA": "3.88",
+    "GRE Score": "328",
+    "GRE V Score": "161",
+    "GRE AW": "4.5",
+    "Masters or PhD": "PhD",
+    "llm-generated-program": "Computer Science",
+    "llm-generated-university": "Carnegie Mellon University"
   }
 ]

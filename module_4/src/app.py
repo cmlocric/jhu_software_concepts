@@ -151,7 +151,7 @@ def format_analysis_value(value):
         return [format_analysis_value(v) for v in value]
     return value
 
-@app.route("/")
+@app.route("/analysis")
 def index():
     connection = get_db_connection(dbname="applicant_db", user="postgres")
     try:

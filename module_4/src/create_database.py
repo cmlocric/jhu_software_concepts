@@ -1,6 +1,6 @@
 # Start sever and connect to database using psql command line tool -bash
 #"/c/Program Files/PostgreSQL/18/bin/pg_ctl.exe" start -D "C:\PostgreSQL\18\data"
-#"/c/Program Files/PostgreSQL/18/bin/psql.exe" -U postgres -h localhost -d studentcourses
+#"/c/Program Files/PostgreSQL/18/bin/psql.exe" -U postgres -h localhost -d applicant_db
 
 import subprocess
 import psycopg
@@ -37,7 +37,6 @@ def start_postgres():
 
 if __name__ == "__main__":
     DB_NAME = "applicant_db"
-
     start_postgres()
 
     connection = psycopg.connect(

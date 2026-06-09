@@ -89,7 +89,7 @@ def test_rendered_analysis_includes_answer_labels(client, app_module, monkeypatc
         ],
     )
 
-    response = client.get("/")
+    response = client.get("/analysis")
     page = response.get_data(as_text=True)
 
     assert response.status_code == 200
@@ -119,7 +119,7 @@ def test_percentage_values_are_formatted_with_two_decimals(client, app_module, m
         ],
     )
 
-    response = client.get("/")
+    response = client.get("/analysis")
     page = response.get_data(as_text=True)
 
     assert response.status_code == 200
@@ -153,7 +153,7 @@ def test_percentage_values_keep_trailing_zero_to_two_decimals(client, app_module
         ],
     )
 
-    response = client.get("/")
+    response = client.get("/analysis")
     page = response.get_data(as_text=True)
 
     assert response.status_code == 200

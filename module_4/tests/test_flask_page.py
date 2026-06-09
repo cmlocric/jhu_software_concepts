@@ -94,7 +94,7 @@ def test_flask_app_is_created_and_expected_routes_exist(app_module):
 
     routes = {rule.rule for rule in app_module.app.url_map.iter_rules()}
 
-    assert "/" in routes
+    assert "/analysis" in routes
     assert "/pull-data" in routes
     assert "/update-analysis" in routes
 
@@ -109,7 +109,7 @@ def test_index_page_loads_successfully(client):
     :return: None
     :rtype: None
     """
-    response = client.get("/")
+    response = client.get("/analysis")
 
     assert response.status_code == 200
 
@@ -124,7 +124,7 @@ def test_index_page_contains_required_buttons_and_text(client):
     :return: None
     :rtype: None
     """
-    response = client.get("/")
+    response = client.get("/analysis")
     page = response.get_data(as_text=True)
 
     assert "Pull Data" in page
