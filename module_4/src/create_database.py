@@ -2,35 +2,71 @@
 #"/c/Program Files/PostgreSQL/18/bin/pg_ctl.exe" start -D "C:\PostgreSQL\18\data"
 #"/c/Program Files/PostgreSQL/18/bin/psql.exe" -U postgres -h localhost -d studentcourses
 
+import subprocess
 import psycopg
 
-DB_NAME = "applicant_db"
+PG_CTL = r"C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe"
+PG_DATA = r"C:\PostgreSQL\18\data"
 
-connection = psycopg.connect(
-     user="postgres"
- )
+def start_postgres():
+    status = subprocess.run(
+        [PG_CTL, "status", "-D", PG_DATA],
+        text=True,
+        capture_output=True,
+    )
 
-connection.autocommit = True
+    if status.returncode == 0:
+        print("PostgreSQL server is already running.")
+        return
 
-#UTF8 to avoid encoding issues when inserting data with non-UTF8 characters into WIN1252 encoded PostgreSQL on Windows.
-with connection.cursor() as cur:
-    cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (DB_NAME,))
-    exists = cur.fetchone()
+    result = subprocess.run(
+        [PG_CTL, "start", "-D", PG_DATA, "-w"],
+        text=True,
+        capture_output=True,
+    )
 
-    if not exists:
-        cur.execute(f'CREATE DATABASE "{DB_NAME}" WITH ENCODING \'UTF8\' TEMPLATE template0;')
-        print(f"Database {DB_NAME} created.")
-    else:
-        print(f"Database {DB_NAME} already exists.")
+    print("pg_ctl stdout:")
+    print(result.stdout)
+    print("pg_ctl stderr:")
+    print(result.stderr)
 
-cur.close()
-connection.close()
+    if result.returncode != 0:
+        raise RuntimeError(f"PostgreSQL failed to start (exit {result.returncode})")
 
-#Connect to the database we created to verify encoding and other settings.
-connection = psycopg.connect(
-dbname="applicant_db",
-user="postgres"
-)
+    print("PostgreSQL server started.")
 
-with connection.cursor() as cur:
-    print('Server encoding:',cur.execute('SHOW server_encoding;').fetchall())
+if __name__ == "__main__":
+    DB_NAME = "applicant_db"
+
+    start_postgres()
+
+    connection = psycopg.connect(
+        dbname="postgres",
+        user="postgres",
+        connect_timeout=5,
+    )
+    connection.autocommit = True
+
+    with connection.cursor() as cur:
+        cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (DB_NAME,))
+        exists = cur.fetchone()
+
+        if not exists:
+            cur.execute(f'CREATE DATABASE "{DB_NAME}" WITH ENCODING \'UTF8\' TEMPLATE template0;')
+            print(f"Database {DB_NAME} created.")
+        else:
+            print(f"Database {DB_NAME} already exists.")
+
+    connection.close()
+
+    connection = psycopg.connect(
+        dbname=DB_NAME,
+        user="postgres",
+        connect_timeout=5,
+    )
+
+    with connection.cursor() as cur:
+        cur.execute("SHOW server_encoding;")
+        print("Server encoding:", cur.fetchall())
+
+    connection.close()
