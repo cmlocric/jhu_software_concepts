@@ -14,7 +14,8 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-import load_data
+# pyrefly: ignore [missing-import]
+import load_data  # noqa: E402
 
 pytestmark = [pytest.mark.db, pytest.mark.integration]
 
@@ -29,21 +30,18 @@ def app_module():
 
 @pytest.fixture
 def client(app_module):
-    """Create a Flask test client.
-
-    :param app_module: The imported Flask app module.
-    :type app_module: module
-    :yield: A Flask test client instance.
-    :rtype: flask.testing.FlaskClient
-    """
     original_testing = app_module.app.config.get("TESTING", False)
+    original_pull_busy = getattr(app_module, "pull_data_running", False)
+
     app_module.app.config.update(TESTING=True)
+    app_module.pull_data_running = False
 
     with app_module.app.test_client() as test_client:
         yield test_client
 
     app_module.app.config.update(TESTING=original_testing)
-
+    app_module.pull_data_running = original_pull_busy
+    
 @pytest.fixture
 def db_connection():
     """Create a live connection to ``applicant_db``.
