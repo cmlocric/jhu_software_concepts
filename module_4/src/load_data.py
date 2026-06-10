@@ -8,7 +8,7 @@ import argparse
 import json
 from datetime import datetime
 from pathlib import Path
-
+import os
 import psycopg
 
 # DB connection parameters
@@ -18,6 +18,12 @@ DB_CONFIG = {
     "dbname": "applicant_db",
     "user": "postgres"
 }
+
+def get_db_config():
+    database_url = os.environ.get("DATABASE_URL")
+    if database_url:
+        return database_url
+    return DB_CONFIG
 
 # File path and table name
 DEFAULT_JSON_FILE = (r"C:\Users\hz98yb\Training_Files\jhu_software_concepts\module_3\json_files\applicant_data_updated_cleaned.json")
@@ -130,7 +136,13 @@ def load_json_to_postgres(
     limit = len(data)
     data = data[:limit]
 
-    with psycopg.connect(**DB_CONFIG) as connection:
+    db_target = get_db_config()
+    if isinstance(db_target, str):
+        connection_ctx = psycopg.connect(db_target)
+    else:
+        connection_ctx = psycopg.connect(**db_target)
+
+    with connection_ctx as connection:
         with connection.cursor() as cur:
             cur.execute(f"""
                 CREATE TABLE IF NOT EXISTS {table_name} (

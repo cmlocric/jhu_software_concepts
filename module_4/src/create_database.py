@@ -4,9 +4,12 @@
 
 import subprocess
 import psycopg
+import os
 
 PG_CTL = r"C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe"
 PG_DATA = r"C:\PostgreSQL\18\data"
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 def start_postgres():
     status = subprocess.run(
@@ -38,12 +41,13 @@ def start_postgres():
 if __name__ == "__main__":
     DB_NAME = "applicant_db"
     start_postgres()
-
-    connection = psycopg.connect(
-        dbname="postgres",
-        user="postgres",
-        connect_timeout=5,
+    
+    connection = psycopg.connect(DATABASE_URL) if DATABASE_URL else psycopg.connect(
+    dbname="postgres",
+    user="postgres",
+    connect_timeout=5,
     )
+    
     connection.autocommit = True
 
     with connection.cursor() as cur:

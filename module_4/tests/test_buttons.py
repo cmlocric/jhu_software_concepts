@@ -261,6 +261,7 @@ def test_post_update_analysis_returns_409_when_pull_is_in_progress(
 
     payload = response.get_json()
     assert payload["ok"] is False
+    assert payload["busy"] is True
     assert "running" in payload["error"].lower()
     assert update_called is False
 
@@ -309,5 +310,6 @@ def test_post_pull_data_returns_409_when_busy(
 
     payload = response.get_json()
     assert payload["ok"] is False
+    assert payload["busy"] is True
     assert "already in progress" in payload["error"].lower()
     assert pull_called is False

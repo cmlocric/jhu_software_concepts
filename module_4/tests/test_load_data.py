@@ -80,6 +80,65 @@ def test_clean_obj_parse_helpers_and_pick():
     assert load_data.pick(row, "a", "b", "c") == "value"
     assert load_data.pick(row, "missing") is None
 
+def test_load_json_to_postgres_uses_database_url_when_present(monkeypatch, tmp_path):
+    # pyrefly: ignore [missing-import]
+    import load_data
+
+    json_file = tmp_path / "records.json"
+    json_file.write_text("[]", encoding="utf-8")
+
+    captured = {"args": None, "kwargs": None}
+
+    class DummyConnection:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def cursor(self):
+            class DummyCursor:
+                def __enter__(self_inner):
+                    return self_inner
+
+                def __exit__(self_inner, exc_type, exc, tb):
+                    return False
+
+                def execute(self_inner, *args, **kwargs):
+                    pass
+
+                def executemany(self_inner, *args, **kwargs):
+                    pass
+
+            return DummyCursor()
+
+        def commit(self):
+            pass
+
+    def fake_connect(*args, **kwargs):
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return DummyConnection()
+
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example-user@example-host/test_db")
+
+    monkeypatch.setattr(
+        load_data,
+        "read_json_or_jsonl",
+        lambda path: [{"Program Name": "Test Program"}],
+    )
+
+    monkeypatch.setattr(load_data.psycopg, "connect", fake_connect)
+
+    load_data.load_json_to_postgres(
+        json_file=str(json_file),
+        table_name="applicants_test",
+    )
+
+    assert (
+        captured["args"] == ("postgresql://example-user@example-host/test_db",)
+        or captured["kwargs"] == {"conninfo": "postgresql://example-user@example-host/test_db"}
+    )
 
 def test_normalize_records_covers_all_supported_shapes():
     load_data = importlib.import_module("load_data")

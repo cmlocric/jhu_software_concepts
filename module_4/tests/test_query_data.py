@@ -70,7 +70,6 @@ def test_query_data_import_initializes_module_connection(monkeypatch):
     assert captured == {"user": "postgres", "dbname": "applicant_db"}
     assert module.connection is connection
 
-
 def test_convert_decimal_handles_decimal_and_other_values(monkeypatch):
     module, _ = import_fresh_query_data(monkeypatch)
 
@@ -97,6 +96,22 @@ def test_execute_query_formats_results_by_shape(monkeypatch, results, expected):
 
     assert module.execute_query(module.connection, query) == expected
 
+def test_query_data_import_uses_database_url_when_present(monkeypatch):
+    captured = {}
+    connection = DummyConnection()
+
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example-user@example-host/test_db")
+    monkeypatch.setattr(
+        psycopg,
+        "connect",
+        lambda **kwargs: captured.update(kwargs) or connection,
+    )
+    sys.modules.pop("query_data", None)
+
+    module = importlib.import_module("query_data")
+
+    assert captured == {"conninfo": "postgresql://example-user@example-host/test_db"}
+    assert module.connection is connection
 
 def test_get_all_query_results_zips_questions_and_closes_connection(monkeypatch):
     module, connection = import_fresh_query_data(monkeypatch)

@@ -364,6 +364,7 @@ def test_pull_data_returns_500_when_scrape_fails(client, app_module, monkeypatch
 
     assert response.status_code == 500
     assert payload["ok"] is False
+    assert payload["busy"] is False
     assert payload["error"] == "scrape broke"
     assert app_module.pull_data_running is False
 
@@ -428,6 +429,7 @@ def test_pull_data_returns_500_when_clean_step_fails(client, app_module, monkeyp
 
     assert response.status_code == 500
     assert payload["ok"] is False
+    assert payload["busy"] is False
     assert payload["error"] == "clean broke"
     assert app_module.pull_data_running is False
 
@@ -464,6 +466,7 @@ def test_pull_data_returns_500_when_load_step_fails(client, app_module, monkeypa
 
     assert response.status_code == 500
     assert payload["ok"] is False
+    assert payload["busy"] is False
     assert payload["error"] == "load broke"
     assert app_module.pull_data_running is False
 
@@ -491,6 +494,7 @@ def test_update_analysis_returns_500_when_query_script_fails(client, app_module,
 
     assert response.status_code == 500
     assert payload["ok"] is False
+    assert payload["busy"] is False
     assert payload["error"] == "query broke"
 
 def test_analysis_route_uses_formatted_query_results(client, app_module, monkeypatch):

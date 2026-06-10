@@ -3,7 +3,7 @@ import runpy
 import sys
 from pathlib import Path
 from types import SimpleNamespace
-
+import os
 import psycopg
 import pytest
 from flask import Flask
@@ -29,6 +29,62 @@ def fresh_app_module(monkeypatch):
     sys.modules.pop("query_data", None)
     sys.modules.pop("app", None)
     return importlib.import_module("app")
+
+def test_get_database_url_and_create_app_use_env_and_test_config(monkeypatch):
+    # pyrefly: ignore [missing-import]
+    import create_database
+    import psycopg
+    import sys
+    import importlib
+
+    monkeypatch.setattr(create_database, "start_postgres", lambda: None)
+    monkeypatch.setattr(psycopg, "connect", lambda *args, **kwargs: DummyConnection())
+
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example-user@example-host/test_db")
+
+    sys.modules.pop("query_data", None)
+    sys.modules.pop("app", None)
+    app_module = importlib.import_module("app")
+
+    assert app_module.get_database_url() == "postgresql://example-user@example-host/test_db"
+
+    created = app_module.create_app({"TESTING": True, "CUSTOM_FLAG": "yes"})
+    assert created.config["TESTING"] is True
+    assert created.config["CUSTOM_FLAG"] == "yes"
+
+def test_get_db_connection_uses_database_url_when_no_dbname_or_user(monkeypatch):
+    # pyrefly: ignore [missing-import]
+    import create_database
+    import psycopg
+    import sys
+    import importlib
+
+    monkeypatch.setattr(create_database, "start_postgres", lambda: None)
+
+    captured = {"args": None, "kwargs": None}
+
+    class DummyConnection:
+        def close(self):
+            pass
+
+    def fake_connect(*args, **kwargs):
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return DummyConnection()
+
+    monkeypatch.setattr(psycopg, "connect", fake_connect)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example-user@example-host/test_db")
+
+    sys.modules.pop("query_data", None)
+    sys.modules.pop("app", None)
+    app_module = importlib.import_module("app")
+
+    app_module.get_db_connection()
+
+    assert (
+        captured["args"] == ("postgresql://example-user@example-host/test_db",)
+        or captured["kwargs"] == {"conninfo": "postgresql://example-user@example-host/test_db"}
+    )
 
 def test_get_db_connection_calls_psycopg_connect(monkeypatch):
     app_module = fresh_app_module(monkeypatch)

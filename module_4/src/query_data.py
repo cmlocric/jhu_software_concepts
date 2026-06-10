@@ -1,11 +1,18 @@
 import psycopg
 from decimal import Decimal
 
-#connect to the PostgreSQL database using psycopg and the connection parameters.
-connection = psycopg.connect(
-     user="postgres",
-     dbname='applicant_db'
- )
+import os
+
+def get_database_url():
+    return os.environ.get("DATABASE_URL")
+
+def get_connection():
+    database_url = get_database_url()
+    if database_url:
+        return psycopg.connect(conninfo=database_url)
+    return psycopg.connect(user="postgres", dbname="applicant_db")
+
+connection = get_connection()
 
 def convert_decimal(value):
     if isinstance(value, Decimal):
