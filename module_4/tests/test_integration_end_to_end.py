@@ -414,11 +414,17 @@ def _install_end_to_end_fakes(app_module, monkeypatch, test_table, scrape_batche
         "save_watermark",
         lambda value: state.__setitem__("watermark", value),
     )
+
     monkeypatch.setattr(
-        app_module,
-        "get_db_connection",
-        lambda dbname, user: psycopg.connect(dbname="applicant_db", user="postgres"),
+    app_module,
+    "get_db_connection",
+    lambda dbname, user: (
+        psycopg.connect(conninfo=os.environ["DATABASE_URL"])
+        if os.environ.get("DATABASE_URL")
+        else psycopg.connect(dbname="applicant_db", user="postgres")
+        ),
     )
+
     monkeypatch.setattr(
         app_module,
         "get_all_query_results",
