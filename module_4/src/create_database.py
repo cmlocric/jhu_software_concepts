@@ -12,6 +12,10 @@ PG_DATA = r"C:\PostgreSQL\18\data"
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 def start_postgres():
+    if os.environ.get("DATABASE_URL"):
+        print("DATABASE_URL set; skipping local pg_ctl startup.")
+        return
+
     status = subprocess.run(
         [PG_CTL, "status", "-D", PG_DATA],
         text=True,

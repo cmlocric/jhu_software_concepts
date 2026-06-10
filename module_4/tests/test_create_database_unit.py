@@ -68,6 +68,24 @@ def test_start_postgres_returns_early_when_already_running(monkeypatch, capsys):
 
     assert calls == [[module.PG_CTL, "status", "-D", module.PG_DATA]]
     assert "PostgreSQL server is already running." in capsys.readouterr().out
+    
+def test_start_postgres_skips_local_pg_ctl_when_database_url_is_set(monkeypatch, capsys):
+    sys.modules.pop("create_database", None)
+    module = importlib.import_module("create_database")
+
+    called = {"run": False}
+
+    def fake_run(*args, **kwargs):
+        called["run"] = True
+        raise AssertionError("subprocess.run should not be called when DATABASE_URL is set")
+
+    monkeypatch.setenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/applicant_db")
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+
+    module.start_postgres()
+
+    assert called["run"] is False
+    assert "DATABASE_URL set; skipping local pg_ctl startup." in capsys.readouterr().out
 
 def test_start_postgres_starts_server_when_not_running(monkeypatch, capsys):
     module = fresh_create_database_module()
