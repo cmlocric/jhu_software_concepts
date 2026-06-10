@@ -46,7 +46,7 @@ if __name__ == "__main__":
     DB_NAME = "applicant_db"
     start_postgres()
     
-    connection = psycopg.connect(DATABASE_URL) if DATABASE_URL else psycopg.connect(
+    connection = psycopg.connect(conninfo=DATABASE_URL) if DATABASE_URL else psycopg.connect(
     dbname="postgres",
     user="postgres",
     connect_timeout=5,

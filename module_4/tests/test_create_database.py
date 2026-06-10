@@ -54,6 +54,7 @@ def fresh_create_database_module():
     return importlib.import_module("create_database")
 
 def test_start_postgres_returns_early_when_already_running(monkeypatch, capsys):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
     module = fresh_create_database_module()
 
     calls = []
@@ -88,6 +89,7 @@ def test_start_postgres_skips_local_pg_ctl_when_database_url_is_set(monkeypatch,
     assert "DATABASE_URL set; skipping local pg_ctl startup." in capsys.readouterr().out
 
 def test_start_postgres_starts_server_when_not_running(monkeypatch, capsys):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
     module = fresh_create_database_module()
 
     calls = []
@@ -114,6 +116,7 @@ def test_start_postgres_starts_server_when_not_running(monkeypatch, capsys):
     assert "PostgreSQL server started." in out
 
 def test_start_postgres_raises_when_start_fails(monkeypatch, capsys):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
     module = fresh_create_database_module()
 
     calls = []
@@ -136,6 +139,7 @@ def test_start_postgres_raises_when_start_fails(monkeypatch, capsys):
     assert "failed" in out
 
 def test_main_creates_database_when_missing(monkeypatch, capsys):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
     first_cursor = DummyCursor(fetchone_value=None)
     second_cursor = DummyCursor(fetchall_value=[("UTF8",)])
 
@@ -182,6 +186,7 @@ def test_main_creates_database_when_missing(monkeypatch, capsys):
     assert "Server encoding:" in out
 
 def test_main_skips_create_when_database_already_exists(monkeypatch, capsys):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
     first_cursor = DummyCursor(fetchone_value=(1,))
     second_cursor = DummyCursor(fetchall_value=[("UTF8",)])
 

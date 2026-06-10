@@ -138,7 +138,7 @@ def load_json_to_postgres(
 
     db_target = get_db_config()
     if isinstance(db_target, str):
-        connection_ctx = psycopg.connect(db_target)
+        connection_ctx = psycopg.connect(conninfo=db_target)
     else:
         connection_ctx = psycopg.connect(**db_target)
 

@@ -55,6 +55,7 @@ def import_fresh_query_data(monkeypatch, connection=None):
 
 
 def test_query_data_import_initializes_module_connection(monkeypatch):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
     captured = {}
     connection = DummyConnection()
 

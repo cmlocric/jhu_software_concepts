@@ -5,7 +5,7 @@ import sys
 import uuid
 from pathlib import Path
 from types import SimpleNamespace
-
+import os
 import psycopg
 import pytest
 from bs4 import BeautifulSoup
@@ -58,10 +58,14 @@ def db_connection():
     :yield: PostgreSQL connection used for setup and verification.
     :rtype: psycopg.Connection
     """
-    connection = psycopg.connect(
-        dbname="applicant_db",
-        user="postgres",
-    )
+    db_url = os.environ.get("DATABASE_URL")
+    if db_url:
+        connection = psycopg.connect(conninfo=db_url)
+    else:
+        connection = psycopg.connect(
+            dbname="applicant_db",
+            user="postgres",
+        )
     try:
         yield connection
     finally:

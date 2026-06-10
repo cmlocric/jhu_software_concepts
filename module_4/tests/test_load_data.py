@@ -203,6 +203,7 @@ def test_load_json_to_postgres_returns_early_when_no_data(monkeypatch, capsys):
 
 
 def test_load_json_to_postgres_executes_create_delete_insert_and_index(monkeypatch, capsys):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
     load_data = importlib.import_module("load_data")
     connection = RecordingConnection()
 
