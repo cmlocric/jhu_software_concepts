@@ -3,6 +3,7 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   test:
@@ -25,6 +26,10 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/applicant_db
+
+    defaults:
+      run:
+        working-directory: module_4
 
     steps:
       - name: Check out repo
