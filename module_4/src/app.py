@@ -203,7 +203,8 @@ def create_app(test_config=None):
     :returns: Configured Flask app with analysis and data-pull routes.
     :rtype: flask.Flask
     """
-    start_postgres()
+    if "sphinx" not in sys.modules:
+        start_postgres()
 
     app = Flask(__name__)
     if test_config:

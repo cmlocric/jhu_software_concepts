@@ -1,7 +1,7 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="'en'" data-content_root="./">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -13,7 +13,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=502d9b2c"></script>
+      <script src="_static/documentation_options.js?v=29a6c3e3"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -42,7 +42,36 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <!-- Local TOC -->
               <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">Module_4 assignment - Flask app  db backend with tests documentation</a></li>
+<li><a class="reference internal" href="#">Module_4 assignment - Flask app  db backend with tests documentation</a><ul>
+<li><a class="reference internal" href="#app.create_app"><code class="docutils literal notranslate"><span class="pre">create_app()</span></code></a></li>
+<li><a class="reference internal" href="#app.finish_pull_data"><code class="docutils literal notranslate"><span class="pre">finish_pull_data()</span></code></a></li>
+<li><a class="reference internal" href="#app.format_analysis_value"><code class="docutils literal notranslate"><span class="pre">format_analysis_value()</span></code></a></li>
+<li><a class="reference internal" href="#app.get_database_url"><code class="docutils literal notranslate"><span class="pre">get_database_url()</span></code></a></li>
+<li><a class="reference internal" href="#app.get_db_connection"><code class="docutils literal notranslate"><span class="pre">get_db_connection()</span></code></a></li>
+<li><a class="reference internal" href="#app.get_latest_added_on"><code class="docutils literal notranslate"><span class="pre">get_latest_added_on()</span></code></a></li>
+<li><a class="reference internal" href="#app.is_pull_data_running"><code class="docutils literal notranslate"><span class="pre">is_pull_data_running()</span></code></a></li>
+<li><a class="reference internal" href="#app.load_watermark"><code class="docutils literal notranslate"><span class="pre">load_watermark()</span></code></a></li>
+<li><a class="reference internal" href="#app.parse_added_on_date"><code class="docutils literal notranslate"><span class="pre">parse_added_on_date()</span></code></a></li>
+<li><a class="reference internal" href="#app.read_json_records"><code class="docutils literal notranslate"><span class="pre">read_json_records()</span></code></a></li>
+<li><a class="reference internal" href="#app.run_python_script"><code class="docutils literal notranslate"><span class="pre">run_python_script()</span></code></a></li>
+<li><a class="reference internal" href="#app.save_watermark"><code class="docutils literal notranslate"><span class="pre">save_watermark()</span></code></a></li>
+<li><a class="reference internal" href="#app.try_start_pull_data"><code class="docutils literal notranslate"><span class="pre">try_start_pull_data()</span></code></a></li>
+<li><a class="reference internal" href="#query_data.convert_decimal"><code class="docutils literal notranslate"><span class="pre">convert_decimal()</span></code></a></li>
+<li><a class="reference internal" href="#query_data.execute_query"><code class="docutils literal notranslate"><span class="pre">execute_query()</span></code></a></li>
+<li><a class="reference internal" href="#query_data.get_all_query_results"><code class="docutils literal notranslate"><span class="pre">get_all_query_results()</span></code></a></li>
+<li><a class="reference internal" href="#query_data.get_connection"><code class="docutils literal notranslate"><span class="pre">get_connection()</span></code></a></li>
+<li><a class="reference internal" href="#query_data.get_database_url"><code class="docutils literal notranslate"><span class="pre">get_database_url()</span></code></a></li>
+<li><a class="reference internal" href="#create_database.start_postgres"><code class="docutils literal notranslate"><span class="pre">start_postgres()</span></code></a></li>
+<li><a class="reference internal" href="#load_data.clean_obj"><code class="docutils literal notranslate"><span class="pre">clean_obj()</span></code></a></li>
+<li><a class="reference internal" href="#load_data.get_db_config"><code class="docutils literal notranslate"><span class="pre">get_db_config()</span></code></a></li>
+<li><a class="reference internal" href="#load_data.load_json_to_postgres"><code class="docutils literal notranslate"><span class="pre">load_json_to_postgres()</span></code></a></li>
+<li><a class="reference internal" href="#load_data.normalize_records"><code class="docutils literal notranslate"><span class="pre">normalize_records()</span></code></a></li>
+<li><a class="reference internal" href="#load_data.parse_date"><code class="docutils literal notranslate"><span class="pre">parse_date()</span></code></a></li>
+<li><a class="reference internal" href="#load_data.parse_float"><code class="docutils literal notranslate"><span class="pre">parse_float()</span></code></a></li>
+<li><a class="reference internal" href="#load_data.pick"><code class="docutils literal notranslate"><span class="pre">pick()</span></code></a></li>
+<li><a class="reference internal" href="#load_data.read_json_or_jsonl"><code class="docutils literal notranslate"><span class="pre">read_json_or_jsonl()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
         </div>
@@ -74,8 +103,471 @@
 <p>Add your content using <code class="docutils literal notranslate"><span class="pre">reStructuredText</span></code> syntax. See the
 <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html">reStructuredText</a>
 documentation for details.</p>
-<div class="toctree-wrapper compound" id="module-load_data">
-<span id="module-create_database"></span></div>
+<dl class="py function" id="module-app">
+<dt class="sig sig-object py" id="app.create_app">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">create_app</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#app.create_app" title="Link to this definition"></a></dt>
+<dd><p>Create and configure the Flask application.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>test_config</strong> (<em>dict</em><em> | </em><em>None</em>) – Optional dict of Flask config overrides for testing.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Configured Flask app with analysis and data-pull routes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>flask.Flask</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.finish_pull_data">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">finish_pull_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#app.finish_pull_data" title="Link to this definition"></a></dt>
+<dd><p>Release the pull-data lock after a scrape/load run completes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.format_analysis_value">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">format_analysis_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#app.format_analysis_value" title="Link to this definition"></a></dt>
+<dd><p>Format query result values for HTML display.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>object</em>) – Scalar, tuple, or list from a query result.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Formatted value with floats rounded to two decimal places.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.get_database_url">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">get_database_url</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#app.get_database_url" title="Link to this definition"></a></dt>
+<dd><p>Return the PostgreSQL connection URL for the Flask app.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">DATABASE_URL</span></code> environment variable, or a local default.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.get_db_connection">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">get_db_connection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dbname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#app.get_db_connection" title="Link to this definition"></a></dt>
+<dd><p>Open a PostgreSQL connection using URL or explicit credentials.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dbname</strong> (<em>str</em><em> | </em><em>None</em>) – Optional database name override.</p></li>
+<li><p><strong>user</strong> (<em>str</em><em> | </em><em>None</em>) – Optional database user override.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Active psycopg connection.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>psycopg.Connection</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.get_latest_added_on">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">get_latest_added_on</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#app.get_latest_added_on" title="Link to this definition"></a></dt>
+<dd><p>Find the most recent <code class="docutils literal notranslate"><span class="pre">added_on</span></code> date in a JSON record file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>pathlib.Path</em>) – Path to the JSON record file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Latest date as <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if none found.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.is_pull_data_running">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">is_pull_data_running</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#app.is_pull_data_running" title="Link to this definition"></a></dt>
+<dd><p>Check whether a pull-data job is currently in progress.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if pull data is running.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.load_watermark">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">load_watermark</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#app.load_watermark" title="Link to this definition"></a></dt>
+<dd><p>Load the saved minimum <code class="docutils literal notranslate"><span class="pre">added_on</span></code> date from the watermark file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ISO date string (<code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code>), or <code class="docutils literal notranslate"><span class="pre">None</span></code> if missing.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.parse_added_on_date">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">parse_added_on_date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#app.parse_added_on_date" title="Link to this definition"></a></dt>
+<dd><p>Parse a Grad Cafe <code class="docutils literal notranslate"><span class="pre">added_on</span></code> date string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>str</em>) – Date string in long or abbreviated month format.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Parsed date, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if empty or unparseable.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>datetime.date | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.read_json_records">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">read_json_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#app.read_json_records" title="Link to this definition"></a></dt>
+<dd><p>Read applicant records from a JSON file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>pathlib.Path</em>) – Path to a JSON file containing a list or <code class="docutils literal notranslate"><span class="pre">{&quot;rows&quot;:</span> <span class="pre">[...]}</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of record dictionaries; empty list if file is missing.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[dict]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.run_python_script">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">run_python_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">script_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#app.run_python_script" title="Link to this definition"></a></dt>
+<dd><p>Run a Python script as a subprocess and capture its output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>script_path</strong> (<em>pathlib.Path</em>) – Path to the script to execute.</p></li>
+<li><p><strong>args</strong> (<em>str</em>) – Additional command-line arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Completed subprocess result.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>subprocess.CompletedProcess</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.save_watermark">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">save_watermark</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#app.save_watermark" title="Link to this definition"></a></dt>
+<dd><p>Persist the latest <code class="docutils literal notranslate"><span class="pre">added_on</span></code> date to the watermark file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>str</em>) – ISO date string (<code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code>) to store.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="app.try_start_pull_data">
+<span class="sig-prename descclassname"><span class="pre">app.</span></span><span class="sig-name descname"><span class="pre">try_start_pull_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#app.try_start_pull_data" title="Link to this definition"></a></dt>
+<dd><p>Attempt to acquire the pull-data lock.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if the lock was acquired; <code class="docutils literal notranslate"><span class="pre">False</span></code> if a pull is
+already in progress.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function" id="module-query_data">
+<dt class="sig sig-object py" id="query_data.convert_decimal">
+<span class="sig-prename descclassname"><span class="pre">query_data.</span></span><span class="sig-name descname"><span class="pre">convert_decimal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#query_data.convert_decimal" title="Link to this definition"></a></dt>
+<dd><p>Convert PostgreSQL <code class="docutils literal notranslate"><span class="pre">Decimal</span></code> values to <code class="docutils literal notranslate"><span class="pre">float</span></code> for display.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>object</em>) – Query result cell value.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">float</span></code> if <code class="docutils literal notranslate"><span class="pre">value</span></code> is a <code class="docutils literal notranslate"><span class="pre">Decimal</span></code>; otherwise <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="query_data.execute_query">
+<span class="sig-prename descclassname"><span class="pre">query_data.</span></span><span class="sig-name descname"><span class="pre">execute_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">connection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#query_data.execute_query" title="Link to this definition"></a></dt>
+<dd><p>Execute a SQL query and return a formatted result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>connection</strong> (<em>psycopg.Connection</em>) – Open psycopg database connection.</p></li>
+<li><p><strong>query</strong> (<em>str</em>) – SQL statement to execute.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Scalar, tuple, or list depending on row/column count; <code class="docutils literal notranslate"><span class="pre">None</span></code>
+if no rows returned.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="query_data.get_all_query_results">
+<span class="sig-prename descclassname"><span class="pre">query_data.</span></span><span class="sig-name descname"><span class="pre">get_all_query_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">connection</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#query_data.get_all_query_results" title="Link to this definition"></a></dt>
+<dd><p>Run all analysis queries and pair each with its question text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>connection</strong> (<em>psycopg.Connection</em>) – Open psycopg database connection (closed on return).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of <code class="docutils literal notranslate"><span class="pre">(question,</span> <span class="pre">answer)</span></code> tuples.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[tuple[str, object]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="query_data.get_connection">
+<span class="sig-prename descclassname"><span class="pre">query_data.</span></span><span class="sig-name descname"><span class="pre">get_connection</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#query_data.get_connection" title="Link to this definition"></a></dt>
+<dd><p>Open a connection to the applicant database.</p>
+<p>Uses <code class="docutils literal notranslate"><span class="pre">DATABASE_URL</span></code> when available; otherwise connects to the local
+<code class="docutils literal notranslate"><span class="pre">applicant_db</span></code> database as <code class="docutils literal notranslate"><span class="pre">postgres</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Active psycopg connection.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>psycopg.Connection</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="query_data.get_database_url">
+<span class="sig-prename descclassname"><span class="pre">query_data.</span></span><span class="sig-name descname"><span class="pre">get_database_url</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#query_data.get_database_url" title="Link to this definition"></a></dt>
+<dd><p>Return the <code class="docutils literal notranslate"><span class="pre">DATABASE_URL</span></code> environment variable if set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>PostgreSQL connection URL, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if unset.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function" id="module-create_database">
+<dt class="sig sig-object py" id="create_database.start_postgres">
+<span class="sig-prename descclassname"><span class="pre">create_database.</span></span><span class="sig-name descname"><span class="pre">start_postgres</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#create_database.start_postgres" title="Link to this definition"></a></dt>
+<dd><p>Start the local PostgreSQL server if it is not already running.</p>
+<p>Skips startup when <code class="docutils literal notranslate"><span class="pre">DATABASE_URL</span></code> is set (remote database in use).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If <code class="docutils literal notranslate"><span class="pre">pg_ctl</span> <span class="pre">start</span></code> exits with a non-zero code.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function" id="module-load_data">
+<dt class="sig sig-object py" id="load_data.clean_obj">
+<span class="sig-prename descclassname"><span class="pre">load_data.</span></span><span class="sig-name descname"><span class="pre">clean_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#load_data.clean_obj" title="Link to this definition"></a></dt>
+<dd><p>Recursively normalize string encoding in nested JSON structures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<em>object</em>) – JSON-compatible value (dict, list, str, or scalar).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Copy of <code class="docutils literal notranslate"><span class="pre">obj</span></code> with strings re-encoded via cp1252.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="load_data.get_db_config">
+<span class="sig-prename descclassname"><span class="pre">load_data.</span></span><span class="sig-name descname"><span class="pre">get_db_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#load_data.get_db_config" title="Link to this definition"></a></dt>
+<dd><p>Return database connection settings from the environment or defaults.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">DATABASE_URL</span></code> connection string if set, otherwise the
+<code class="docutils literal notranslate"><span class="pre">DB_CONFIG</span></code> dictionary.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str | dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="load_data.load_json_to_postgres">
+<span class="sig-prename descclassname"><span class="pre">load_data.</span></span><span class="sig-name descname"><span class="pre">load_json_to_postgres</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'C:\\Users\\hz98yb\\Training_Files\\jhu_software_concepts\\module_3\\json_files\\applicant_data_updated_cleaned.json'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'applicants'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#load_data.load_json_to_postgres" title="Link to this definition"></a></dt>
+<dd><p>Load applicant records from JSON/JSONL into a PostgreSQL table.</p>
+<p>Creates the destination table and unique index if they do not exist.
+Optionally deletes existing rows for a given date before inserting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>json_file</strong> (<em>str</em><em> | </em><em>pathlib.Path</em>) – Path to the JSON or JSONL input file.</p></li>
+<li><p><strong>table_name</strong> (<em>str</em>) – Destination PostgreSQL table name.</p></li>
+<li><p><strong>delete_date</strong> (<em>str</em><em> | </em><em>None</em>) – If set, delete rows with this <code class="docutils literal notranslate"><span class="pre">date_added</span></code>
+(<code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code>) before insert.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="load_data.normalize_records">
+<span class="sig-prename descclassname"><span class="pre">load_data.</span></span><span class="sig-name descname"><span class="pre">normalize_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parsed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#load_data.normalize_records" title="Link to this definition"></a></dt>
+<dd><p>Convert parsed JSON into a flat list of cleaned record dicts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>parsed</strong> (<em>dict</em><em> | </em><em>list</em>) – Top-level JSON object or list from a file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of applicant record dictionaries.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[dict]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <code class="docutils literal notranslate"><span class="pre">parsed</span></code> is neither a dict nor a list.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="load_data.parse_date">
+<span class="sig-prename descclassname"><span class="pre">load_data.</span></span><span class="sig-name descname"><span class="pre">parse_date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#load_data.parse_date" title="Link to this definition"></a></dt>
+<dd><p>Parse a date string in <code class="docutils literal notranslate"><span class="pre">&quot;%B</span> <span class="pre">%d,</span> <span class="pre">%Y&quot;</span></code> format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>object</em>) – Date string (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;June</span> <span class="pre">12,</span> <span class="pre">2026&quot;</span></code>).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Parsed date, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if empty or invalid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>datetime.date | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="load_data.parse_float">
+<span class="sig-prename descclassname"><span class="pre">load_data.</span></span><span class="sig-name descname"><span class="pre">parse_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#load_data.parse_float" title="Link to this definition"></a></dt>
+<dd><p>Parse a value as a float, returning <code class="docutils literal notranslate"><span class="pre">None</span></code> on failure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>object</em>) – Raw field value from a JSON record.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Parsed float, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if empty or invalid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="load_data.pick">
+<span class="sig-prename descclassname"><span class="pre">load_data.</span></span><span class="sig-name descname"><span class="pre">pick</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">keys</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#load_data.pick" title="Link to this definition"></a></dt>
+<dd><p>Return the first non-empty value for any of the given keys.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>row</strong> (<em>dict</em>) – Source record dictionary.</p></li>
+<li><p><strong>keys</strong> (<em>str</em>) – Candidate field names, tried in order.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>First matching value, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if none found.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="load_data.read_json_or_jsonl">
+<span class="sig-prename descclassname"><span class="pre">load_data.</span></span><span class="sig-name descname"><span class="pre">read_json_or_jsonl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#load_data.read_json_or_jsonl" title="Link to this definition"></a></dt>
+<dd><p>Read a JSON array/object file or JSONL file into record dicts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em><em> | </em><em>pathlib.Path</em>) – Path to the input file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Normalized list of applicant records.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[dict]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+</div>
 </section>
 
 

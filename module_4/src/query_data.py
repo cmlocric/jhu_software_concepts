@@ -25,8 +25,6 @@ def get_connection():
         return psycopg.connect(conninfo=database_url)
     return psycopg.connect(user="postgres", dbname="applicant_db")
 
-connection = get_connection()
-
 def convert_decimal(value):
     """Convert PostgreSQL ``Decimal`` values to ``float`` for display.
 
@@ -224,6 +222,6 @@ def get_all_query_results(connection):
 
 if __name__ == "__main__":
     #Print the results of all of the queries to the console if not imported as a module
-    query_results = get_all_query_results(connection=connection)
+    query_results = get_all_query_results(connection=get_connection())
     for key, answer in query_results:
         print(f"{key} Answer: {answer}\n")
