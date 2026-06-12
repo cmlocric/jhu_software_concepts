@@ -37,6 +37,13 @@ JSON_OBJ_RE = re.compile(r"\{.*?\}", re.DOTALL)
 
 # ---------------- Canonical lists + abbrev maps ----------------
 def _read_lines(path: str) -> List[str]:
+    """Read non-empty lines from a text file.
+
+    :param path: Path to the canonical list file.
+    :type path: str
+    :returns: Stripped non-empty lines, or an empty list if missing.
+    :rtype: list[str]
+    """
     try:
         with open(path, "r", encoding="utf-8") as f:
             return [ln.strip() for ln in f if ln.strip()]
@@ -111,6 +118,11 @@ _LLM: Llama | None = None
 
 
 def _load_llm() -> Llama:
+    """Load and cache the local GGUF language model.
+
+    :returns: Initialized ``Llama`` instance (singleton).
+    :rtype: llama_cpp.Llama
+    """
     global _LLM
     if _LLM is not None:
         return _LLM
@@ -134,10 +146,26 @@ def _load_llm() -> Llama:
 
 
 def _norm_key(key: str) -> str:
+    """Normalize a dict key for case-insensitive lookup.
+
+    :param key: Original field name from an input row.
+    :type key: str
+    :returns: Lowercase alphanumeric key.
+    :rtype: str
+    """
     return re.sub(r"[^a-z0-9]", "", str(key).lower())
 
 
 def _get_row_value(row: Dict[str, Any], *aliases: str) -> str:
+    """Return the first non-empty value for any alias key in a row.
+
+    :param row: Input record dictionary.
+    :type row: dict[str, Any]
+    :param aliases: Candidate field names, matched case-insensitively.
+    :type aliases: str
+    :returns: First matching non-empty string value.
+    :rtype: str
+    """
     if not row:
         return ""
 
@@ -155,6 +183,13 @@ def _get_row_value(row: Dict[str, Any], *aliases: str) -> str:
 
 
 def _looks_like_university(text: str) -> bool:
+    """Heuristically determine whether text refers to a university.
+
+    :param text: Candidate university or institution string.
+    :type text: str
+    :returns: ``True`` if the text looks like a university name.
+    :rtype: bool
+    """
     t = (text or "").strip()
     if not t:
         return False
@@ -174,6 +209,14 @@ def _looks_like_university(text: str) -> bool:
 
 
 def _split_fallback(text: str) -> Tuple[str, str]:
+    """Split combined program/university text without LLM assistance.
+
+    :param text: Raw combined program and university string.
+    :type text: str
+    :returns: Tuple of ``(program, university)``; university defaults to
+        ``"Unknown"`` when missing.
+    :rtype: tuple[str, str]
+    """
     s = re.sub(r"\s+", " ", (text or "")).strip().strip(",")
     if not s:
         return "", "Unknown"
@@ -206,6 +249,17 @@ def _split_fallback(text: str) -> Tuple[str, str]:
 
 
 def _best_match(name: str, candidates: List[str], cutoff: float = 0.86) -> str | None:
+    """Find the closest fuzzy match for a name in a candidate list.
+
+    :param name: Value to match.
+    :type name: str
+    :param candidates: Canonical names to compare against.
+    :type candidates: list[str]
+    :param cutoff: Minimum similarity ratio (0–1) to accept a match.
+    :type cutoff: float
+    :returns: Best matching candidate, or ``None`` if below cutoff.
+    :rtype: str | None
+    """
     if not name or not candidates:
         return None
     matches = difflib.get_close_matches(name, candidates, n=1, cutoff=cutoff)
@@ -213,6 +267,13 @@ def _best_match(name: str, candidates: List[str], cutoff: float = 0.86) -> str |
 
 
 def _post_normalize_program(prog: str) -> str:
+    """Apply canonical fixes and fuzzy matching to a program name.
+
+    :param prog: Raw or LLM-generated program name.
+    :type prog: str
+    :returns: Normalized program name.
+    :rtype: str
+    """
     p = (prog or "").strip()
     if not p:
         return ""
@@ -226,6 +287,13 @@ def _post_normalize_program(prog: str) -> str:
 
 
 def _post_normalize_university(uni: str) -> str:
+    """Apply canonical fixes and fuzzy matching to a university name.
+
+    :param uni: Raw or LLM-generated university name.
+    :type uni: str
+    :returns: Normalized university name, or ``"Unknown"`` if empty.
+    :rtype: str
+    """
     u = (uni or "").strip()
     if not u:
         return "Unknown"
@@ -245,6 +313,13 @@ def _post_normalize_university(uni: str) -> str:
 
 
 def _build_program_text(row: Dict[str, Any]) -> str:
+    """Build the combined program/university string sent to the LLM.
+
+    :param row: Input applicant record.
+    :type row: dict[str, Any]
+    :returns: Combined text for standardization, or an empty string.
+    :rtype: str
+    """
     program = _get_row_value(
         row,
         "program",
@@ -282,6 +357,13 @@ def _build_program_text(row: Dict[str, Any]) -> str:
 
 
 def _extract_json_payload(text: str) -> Dict[str, Any]:
+    """Extract a JSON object from raw LLM output text.
+
+    :param text: Model response that may contain embedded JSON.
+    :type text: str
+    :returns: Parsed JSON dict, or an empty dict on failure.
+    :rtype: dict[str, Any]
+    """
     if not text:
         return {}
 
@@ -303,6 +385,14 @@ def _extract_json_payload(text: str) -> Dict[str, Any]:
 
 
 def _call_llm(program_text: str) -> Dict[str, str]:
+    """Standardize program and university names using the local LLM.
+
+    :param program_text: Combined program/university input string.
+    :type program_text: str
+    :returns: Dict with ``standardized_program`` and
+        ``standardized_university`` keys.
+    :rtype: dict[str, str]
+    """
     if not (program_text or "").strip():
         return {
             "standardized_program": "",
@@ -350,6 +440,13 @@ def _call_llm(program_text: str) -> Dict[str, str]:
 
 
 def _normalize_input(payload: Any) -> List[Dict[str, Any]]:
+    """Normalize API/CLI payload into a list of row dicts.
+
+    :param payload: JSON body as a list or ``{"rows": [...]}`` dict.
+    :type payload: Any
+    :returns: List of input rows; empty list if format is unsupported.
+    :rtype: list[dict[str, Any]]
+    """
     if isinstance(payload, list):
         return payload
     if isinstance(payload, dict) and isinstance(payload.get("rows"), list):
@@ -359,11 +456,22 @@ def _normalize_input(payload: Any) -> List[Dict[str, Any]]:
 
 @app.get("/")
 def health() -> Any:
+    """Health-check endpoint.
+
+    :returns: JSON payload ``{"ok": true}``.
+    :rtype: flask.Response
+    """
     return jsonify({"ok": True})
 
 
 @app.post("/standardize")
 def standardize() -> Any:
+    """Standardize program and university fields for a batch of rows.
+
+    :returns: JSON payload ``{"rows": [...]}`` with LLM-generated fields
+        added to each row.
+    :rtype: flask.Response
+    """
     payload = request.get_json(force=True, silent=True)
     rows = _normalize_input(payload)
 
@@ -395,6 +503,19 @@ def _cli_process_file(
     append: bool,
     to_stdout: bool,
 ) -> None:
+    """Process a JSON input file and write standardized rows as JSONL.
+
+    :param in_path: Path to input JSON file.
+    :type in_path: str
+    :param out_path: Output JSONL path; defaults to ``<input>.jsonl``.
+    :type out_path: str | None
+    :param append: Append to the output file instead of overwriting.
+    :type append: bool
+    :param to_stdout: Write JSONL to stdout instead of a file.
+    :type to_stdout: bool
+    :returns: ``None``
+    :rtype: None
+    """
     with open(in_path, "r", encoding="utf-8") as f:
         rows = _normalize_input(json.load(f))
 

@@ -26,9 +26,20 @@ pull_data_running = False
 pull_data_lock = Lock()
 
 def get_database_url() -> str:
+    """Return the PostgreSQL connection URL for the Flask app.
+
+    :returns: ``DATABASE_URL`` environment variable, or a local default.
+    :rtype: str
+    """
     return os.environ.get("DATABASE_URL", "postgresql://postgres@localhost/applicant_db")
 
 def try_start_pull_data() -> bool:
+    """Attempt to acquire the pull-data lock.
+
+    :returns: ``True`` if the lock was acquired; ``False`` if a pull is
+        already in progress.
+    :rtype: bool
+    """
     global pull_data_running
     with pull_data_lock:
         if pull_data_running:
@@ -37,15 +48,34 @@ def try_start_pull_data() -> bool:
         return True
 
 def finish_pull_data() -> None:
+    """Release the pull-data lock after a scrape/load run completes.
+
+    :returns: ``None``
+    :rtype: None
+    """
     global pull_data_running
     with pull_data_lock:
         pull_data_running = False
 
 def is_pull_data_running() -> bool:
+    """Check whether a pull-data job is currently in progress.
+
+    :returns: ``True`` if pull data is running.
+    :rtype: bool
+    """
     with pull_data_lock:
         return pull_data_running
 
 def get_db_connection(dbname=None, user=None):
+    """Open a PostgreSQL connection using URL or explicit credentials.
+
+    :param dbname: Optional database name override.
+    :type dbname: str | None
+    :param user: Optional database user override.
+    :type user: str | None
+    :returns: Active psycopg connection.
+    :rtype: psycopg.Connection
+    """
     if dbname is not None or user is not None:
         kwargs = {}
         if dbname is not None:
@@ -56,6 +86,15 @@ def get_db_connection(dbname=None, user=None):
     return psycopg.connect(get_database_url())
 
 def run_python_script(script_path: Path, *args: str):
+    """Run a Python script as a subprocess and capture its output.
+
+    :param script_path: Path to the script to execute.
+    :type script_path: pathlib.Path
+    :param args: Additional command-line arguments.
+    :type args: str
+    :returns: Completed subprocess result.
+    :rtype: subprocess.CompletedProcess
+    """
     return subprocess.run(
         [sys.executable, str(script_path), *args],
         cwd=BASE_DIR,
@@ -64,6 +103,11 @@ def run_python_script(script_path: Path, *args: str):
     )
 
 def load_watermark() -> str | None:
+    """Load the saved minimum ``added_on`` date from the watermark file.
+
+    :returns: ISO date string (``YYYY-MM-DD``), or ``None`` if missing.
+    :rtype: str | None
+    """
     if not WATERMARK_FILE.exists():
         return None
     with open(WATERMARK_FILE, "r", encoding="utf-8") as f:
@@ -71,11 +115,25 @@ def load_watermark() -> str | None:
     return payload.get("min_added_on")
 
 def save_watermark(value: str) -> None:
+    """Persist the latest ``added_on`` date to the watermark file.
+
+    :param value: ISO date string (``YYYY-MM-DD``) to store.
+    :type value: str
+    :returns: ``None``
+    :rtype: None
+    """
     WATERMARK_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(WATERMARK_FILE, "w", encoding="utf-8") as f:
         json.dump({"min_added_on": value}, f, indent=2)
 
 def parse_added_on_date(value: str):
+    """Parse a Grad Cafe ``added_on`` date string.
+
+    :param value: Date string in long or abbreviated month format.
+    :type value: str
+    :returns: Parsed date, or ``None`` if empty or unparseable.
+    :rtype: datetime.date | None
+    """
     if not value:
         return None
     for fmt in ("%B %d, %Y", "%b %d, %Y"):
@@ -86,6 +144,13 @@ def parse_added_on_date(value: str):
     return None
 
 def read_json_records(path: Path):
+    """Read applicant records from a JSON file.
+
+    :param path: Path to a JSON file containing a list or ``{"rows": [...]}``.
+    :type path: pathlib.Path
+    :returns: List of record dictionaries; empty list if file is missing.
+    :rtype: list[dict]
+    """
     if not path.exists():
         return []
     with open(path, "r", encoding="utf-8") as f:
@@ -97,6 +162,13 @@ def read_json_records(path: Path):
     return []
 
 def get_latest_added_on(path: Path) -> str | None:
+    """Find the most recent ``added_on`` date in a JSON record file.
+
+    :param path: Path to the JSON record file.
+    :type path: pathlib.Path
+    :returns: Latest date as ``YYYY-MM-DD``, or ``None`` if none found.
+    :rtype: str | None
+    """
     records = read_json_records(path)
     dates = []
     for row in records:
@@ -108,6 +180,13 @@ def get_latest_added_on(path: Path) -> str | None:
     return max(dates).strftime("%Y-%m-%d")
 
 def format_analysis_value(value):
+    """Format query result values for HTML display.
+
+    :param value: Scalar, tuple, or list from a query result.
+    :type value: object
+    :returns: Formatted value with floats rounded to two decimal places.
+    :rtype: object
+    """
     if isinstance(value, float):
         return f"{value:.2f}"
     if isinstance(value, tuple):
@@ -117,6 +196,13 @@ def format_analysis_value(value):
     return value
 
 def create_app(test_config=None):
+    """Create and configure the Flask application.
+
+    :param test_config: Optional dict of Flask config overrides for testing.
+    :type test_config: dict | None
+    :returns: Configured Flask app with analysis and data-pull routes.
+    :rtype: flask.Flask
+    """
     start_postgres()
 
     app = Flask(__name__)
@@ -125,6 +211,11 @@ def create_app(test_config=None):
 
     @app.route("/analysis")
     def index():
+        """Render the analysis page with all query results.
+
+        :returns: Rendered ``index.html`` template with query results.
+        :rtype: str
+        """
         connection = get_db_connection(dbname="applicant_db", user="postgres")
         try:
             query_results = get_all_query_results(connection)
@@ -138,6 +229,11 @@ def create_app(test_config=None):
 
     @app.post("/pull-data")
     def pull_data():
+        """Run scrape, clean, and load pipeline to refresh applicant data.
+
+        :returns: JSON response indicating success, busy state, or error.
+        :rtype: flask.Response
+        """
         if not try_start_pull_data():
             return jsonify(
                 ok=False,
@@ -219,6 +315,11 @@ def create_app(test_config=None):
 
     @app.post("/update-analysis")
     def update_analysis():
+        """Re-run analysis queries by executing ``query_data.py``.
+
+        :returns: JSON response indicating success, busy state, or error.
+        :rtype: flask.Response
+        """
         if is_pull_data_running():
             return jsonify(
                 ok=False,

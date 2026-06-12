@@ -34,6 +34,11 @@ PROXY = "http://naproxy.gm.com:8080"
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def build_http_client():
+    """Build an urllib3 HTTP client with optional proxy support.
+
+    :returns: Configured ``ProxyManager`` or ``PoolManager`` instance.
+    :rtype: urllib3.ProxyManager | urllib3.PoolManager
+    """
     if PROXY:
         return urllib3.ProxyManager(
             PROXY,
@@ -91,19 +96,51 @@ COMMENTS_RE = re.compile(
 # Text cleanup helpers
 # ---------------------------------------------------------------------
 def clean(text: str) -> str:
+    """Collapse whitespace and strip leading/trailing space from text.
+
+    :param text: Raw input string.
+    :type text: str
+    :returns: Normalized single-line string.
+    :rtype: str
+    """
     return re.sub(r"\s+", " ", text or "").strip()
 
 def extract(pattern, text: str, default="") -> str:
+    """Extract and clean the first regex capture group from text.
+
+    :param pattern: Compiled regular expression with a capture group.
+    :type pattern: re.Pattern
+    :param text: Source text to search.
+    :type text: str
+    :param default: Value returned when no match is found.
+    :type default: str
+    :returns: Cleaned captured substring, or ``default``.
+    :rtype: str
+    """
     match = pattern.search(text or "")
     return clean(match.group(1)) if match else default
 
 def coalesce(*values):
+    """Return the first non-empty, non-``"Not provided"`` value.
+
+    :param values: Candidate values tried in order.
+    :type values: object
+    :returns: First usable value, or an empty string.
+    :rtype: object
+    """
     for value in values:
         if value not in (None, "", "Not provided"):
             return value
     return ""
 
 def empty_if_not_provided(value: str) -> str:
+    """Return an empty string when the value is missing or ``"Not provided"``.
+
+    :param value: Raw field value from a scraped page.
+    :type value: str
+    :returns: Cleaned value, or ``""`` if not provided.
+    :rtype: str
+    """
     if not value:
         return ""
     value = clean(value)
@@ -113,6 +150,13 @@ def empty_if_not_provided(value: str) -> str:
 # Normalization helpers
 # ---------------------------------------------------------------------
 def normalize_country(value: str) -> str:
+    """Normalize student country/type labels to canonical values.
+
+    :param value: Raw country or student-type string.
+    :type value: str
+    :returns: ``"International"``, ``"American"``, or the original value.
+    :rtype: str
+    """
     if not value:
         return ""
 
@@ -127,6 +171,13 @@ def normalize_country(value: str) -> str:
     return value
 
 def normalize_degree(value: str) -> str:
+    """Normalize degree type strings to ``"Masters"`` or ``"PhD"``.
+
+    :param value: Raw degree type string.
+    :type value: str
+    :returns: Canonical degree label, or the original value.
+    :rtype: str
+    """
     if not value:
         return ""
 
@@ -141,6 +192,13 @@ def normalize_degree(value: str) -> str:
     return value
 
 def normalize_slash_date(date_str: str) -> str:
+    """Convert slash-separated dates to ``"%B %d, %Y"`` format.
+
+    :param date_str: Date string such as ``"06/12/2026"`` or ``"12/06/2026"``.
+    :type date_str: str
+    :returns: Long-form date string, or the original if parsing fails.
+    :rtype: str
+    """
     if not date_str:
         return ""
 
@@ -154,6 +212,13 @@ def normalize_slash_date(date_str: str) -> str:
     return date_str
 
 def normalize_month_day_year(date_str: str) -> str:
+    """Normalize month/day/year strings to ``"%B %d, %Y"`` format.
+
+    :param date_str: Date string in long or abbreviated month format.
+    :type date_str: str
+    :returns: Standardized date string, or the original if parsing fails.
+    :rtype: str
+    """
     if not date_str:
         return ""
 
@@ -167,6 +232,13 @@ def normalize_month_day_year(date_str: str) -> str:
     return date_str
 
 def parse_added_on_date(value: str) -> date | None:
+    """Parse a Grad Cafe ``added_on`` date string to a ``date`` object.
+
+    :param value: Date string from a survey summary block.
+    :type value: str
+    :returns: Parsed date, or ``None`` if empty or unparseable.
+    :rtype: datetime.date | None
+    """
     if not value:
         return None
 
@@ -181,6 +253,14 @@ def parse_added_on_date(value: str) -> date | None:
     return None
 
 def parse_watermark(value: str | None) -> date | None:
+    """Parse an incremental scrape watermark date string.
+
+    :param value: Watermark date in ``YYYY-MM-DD`` or long month format.
+    :type value: str | None
+    :returns: Parsed date, or ``None`` if ``value`` is empty.
+    :rtype: datetime.date | None
+    :raises ValueError: If ``value`` is non-empty but not parseable.
+    """
     if not value:
         return None
 
@@ -198,6 +278,19 @@ def parse_watermark(value: str | None) -> date | None:
 # HTTP fetch helper
 # ---------------------------------------------------------------------
 def fetch_html(url: str, retries: int = 3, backoff_seconds: float = 1.0) -> str:
+    """Fetch HTML from a URL with retries and exponential backoff.
+
+    :param url: Target URL.
+    :type url: str
+    :param retries: Maximum number of request attempts.
+    :type retries: int
+    :param backoff_seconds: Base delay multiplied by attempt number.
+    :type backoff_seconds: float
+    :returns: Decoded UTF-8 HTML content.
+    :rtype: str
+    :raises RuntimeError: If the server returns a non-200 status.
+    :raises Exception: Re-raises the last error after all retries fail.
+    """
     last_error = None
 
     for attempt in range(1, retries + 1):
@@ -224,6 +317,13 @@ def fetch_html(url: str, retries: int = 3, backoff_seconds: float = 1.0) -> str:
 # Selenium browser construction
 # ---------------------------------------------------------------------
 def build_driver(headless: bool = True) -> webdriver.Chrome:
+    """Create a configured Chrome WebDriver for survey pagination.
+
+    :param headless: Run the browser without a visible window.
+    :type headless: bool
+    :returns: Initialized Chrome WebDriver instance.
+    :rtype: selenium.webdriver.Chrome
+    """
     options = Options()
 
     if headless:
@@ -256,10 +356,15 @@ def build_driver(headless: bool = True) -> webdriver.Chrome:
 # Survey-page parsing helpers
 # ---------------------------------------------------------------------
 def get_anchor_container_text(a_tag) -> str:
-    """
-    Walk upward from a result link and return the smallest parent block that
-    contains BOTH decision text and the term when possible. This fixes the
-    missing term issue caused by returning too early on a partial ancestor.
+    """Return the best ancestor text block for a survey result link.
+
+    Walks upward from a result link and returns the smallest parent block
+    that contains both decision text and the term when possible.
+
+    :param a_tag: BeautifulSoup anchor tag for a ``/result/`` link.
+    :type a_tag: bs4.element.Tag
+    :returns: Cleaned text from the best matching ancestor element.
+    :rtype: str
     """
     decision_markers = ("accepted on", "rejected on", "wait listed on", "interview on")
 
@@ -294,6 +399,15 @@ def get_anchor_container_text(a_tag) -> str:
     return best_text
 
 def parse_survey_summary_block(block_text: str, url: str) -> dict:
+    """Parse a survey listing block into a summary record dict.
+
+    :param block_text: Raw text surrounding a result link on the survey page.
+    :type block_text: str
+    :param url: Full URL of the applicant result page.
+    :type url: str
+    :returns: Partial applicant record with survey-level fields.
+    :rtype: dict
+    """
     added_on = extract(DATE_ADDED_RE, block_text)
     added_on_normalized = normalize_month_day_year(added_on)
 
@@ -325,6 +439,13 @@ def parse_survey_summary_block(block_text: str, url: str) -> dict:
     }
 
 def extract_result_entries_from_page(html: str) -> list[dict]:
+    """Extract survey summary entries from a single survey page.
+
+    :param html: Raw HTML of a survey results page.
+    :type html: str
+    :returns: List of summary dicts keyed by result URL.
+    :rtype: list[dict]
+    """
     soup = BeautifulSoup(html, "html.parser")
     entries = []
     seen = set()
@@ -345,17 +466,42 @@ def extract_result_entries_from_page(html: str) -> list[dict]:
     return entries
 
 def wait_for_results(driver: webdriver.Chrome, timeout: int = 20):
+    """Wait until result links appear on the current survey page.
+
+    :param driver: Active Chrome WebDriver instance.
+    :type driver: selenium.webdriver.Chrome
+    :param timeout: Maximum wait time in seconds.
+    :type timeout: int
+    :returns: ``WebDriverWait`` instance after results are present.
+    :rtype: selenium.webdriver.support.ui.WebDriverWait
+    """
     wait = WebDriverWait(driver, timeout)
     wait.until(lambda d: d.find_elements(By.CSS_SELECTOR, 'a[href^="/result/"]'))
     return wait
 
 def get_first_result_href(driver: webdriver.Chrome) -> str | None:
+    """Return the href of the first result link on the current page.
+
+    :param driver: Active Chrome WebDriver instance.
+    :type driver: selenium.webdriver.Chrome
+    :returns: Full or relative result URL, or ``None`` if no links found.
+    :rtype: str | None
+    """
     elements = driver.find_elements(By.CSS_SELECTOR, 'a[href^="/result/"]')
     if not elements:
         return None
     return elements[0].get_attribute("href")
 
 def click_next_page(driver: webdriver.Chrome, timeout: int = 20) -> bool:
+    """Click the survey pagination ``Next`` control and wait for new results.
+
+    :param driver: Active Chrome WebDriver instance.
+    :type driver: selenium.webdriver.Chrome
+    :param timeout: Maximum wait time after clicking Next.
+    :type timeout: int
+    :returns: ``True`` if pagination succeeded; ``False`` otherwise.
+    :rtype: bool
+    """
     old_first_href = get_first_result_href(driver)
     wait = WebDriverWait(driver, timeout)
 
@@ -384,6 +530,17 @@ def click_next_page(driver: webdriver.Chrome, timeout: int = 20) -> bool:
 # Detail-page parsing
 # ---------------------------------------------------------------------
 def parse_gradcafe_result_html(html: str, url: str, survey_summary: dict | None = None) -> dict:
+    """Parse a Grad Cafe detail page into a full applicant record.
+
+    :param html: Raw HTML of the result detail page.
+    :type html: str
+    :param url: Full URL of the result page.
+    :type url: str
+    :param survey_summary: Optional fields parsed from the survey listing.
+    :type survey_summary: dict | None
+    :returns: Complete applicant record dictionary.
+    :rtype: dict
+    """
     survey_summary = survey_summary or {}
 
     soup = BeautifulSoup(html, "html.parser")
@@ -434,6 +591,17 @@ def parse_gradcafe_result_html(html: str, url: str, survey_summary: dict | None 
     }
 
 def parse_gradcafe_result(url: str, survey_summary: dict | None = None, retries: int = 3) -> dict:
+    """Fetch and parse a single Grad Cafe result detail page.
+
+    :param url: Full URL of the result page.
+    :type url: str
+    :param survey_summary: Optional fields parsed from the survey listing.
+    :type survey_summary: dict | None
+    :param retries: Number of HTTP fetch attempts.
+    :type retries: int
+    :returns: Complete applicant record dictionary.
+    :rtype: dict
+    """
     html = fetch_html(url, retries=retries)
     return parse_gradcafe_result_html(html, url, survey_summary=survey_summary)
 
@@ -449,6 +617,29 @@ def scrape_survey_records(
     max_workers: int = 8,
     min_added_on: str | None = None,
 ) -> list[dict]:
+    """Scrape applicant records from The Grad Cafe survey with pagination.
+
+    Uses Selenium to paginate the survey listing, then fetches detail pages
+    concurrently. Optionally filters records by a minimum ``added_on`` date.
+
+    :param start_url: Survey listing URL to begin scraping.
+    :type start_url: str
+    :param target_records: Maximum number of records to collect.
+    :type target_records: int
+    :param max_pages: Optional cap on survey pages to visit.
+    :type max_pages: int | None
+    :param headless: Run Chrome without a visible window.
+    :type headless: bool
+    :param pause_seconds: Delay between page turns.
+    :type pause_seconds: float
+    :param max_workers: Thread pool size for detail-page fetches.
+    :type max_workers: int
+    :param min_added_on: Only include records added on/after this date
+        (``YYYY-MM-DD``).
+    :type min_added_on: str | None
+    :returns: List of fully parsed applicant record dictionaries.
+    :rtype: list[dict]
+    """
     if target_records <= 0:
         return []
 

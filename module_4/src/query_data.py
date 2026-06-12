@@ -4,9 +4,22 @@ from decimal import Decimal
 import os
 
 def get_database_url():
+    """Return the ``DATABASE_URL`` environment variable if set.
+
+    :returns: PostgreSQL connection URL, or ``None`` if unset.
+    :rtype: str | None
+    """
     return os.environ.get("DATABASE_URL")
 
 def get_connection():
+    """Open a connection to the applicant database.
+
+    Uses ``DATABASE_URL`` when available; otherwise connects to the local
+    ``applicant_db`` database as ``postgres``.
+
+    :returns: Active psycopg connection.
+    :rtype: psycopg.Connection
+    """
     database_url = get_database_url()
     if database_url:
         return psycopg.connect(conninfo=database_url)
@@ -15,12 +28,28 @@ def get_connection():
 connection = get_connection()
 
 def convert_decimal(value):
+    """Convert PostgreSQL ``Decimal`` values to ``float`` for display.
+
+    :param value: Query result cell value.
+    :type value: object
+    :returns: ``float`` if ``value`` is a ``Decimal``; otherwise ``value``.
+    :rtype: object
+    """
     if isinstance(value, Decimal):
         return float(value)
     return value
 
 def execute_query(connection, query):
+    """Execute a SQL query and return a formatted result.
 
+    :param connection: Open psycopg database connection.
+    :type connection: psycopg.Connection
+    :param query: SQL statement to execute.
+    :type query: str
+    :returns: Scalar, tuple, or list depending on row/column count; ``None``
+        if no rows returned.
+    :rtype: object | None
+    """
     #Set up cursor and execute SQL queries to answer the questions about the data in the applicants table.
     with connection.cursor() as cur:
         
@@ -180,6 +209,13 @@ question_query_dict = {
 
 #Function to execute and store results as a module that can be imported into the Flask app to render the results on the webpage. 
 def get_all_query_results(connection):
+    """Run all analysis queries and pair each with its question text.
+
+    :param connection: Open psycopg database connection (closed on return).
+    :type connection: psycopg.Connection
+    :returns: List of ``(question, answer)`` tuples.
+    :rtype: list[tuple[str, object]]
+    """
     try:
         answer_list = [execute_query(connection, query) for query in question_query_dict.values()]
         return list(zip(question_query_dict.keys(), answer_list))

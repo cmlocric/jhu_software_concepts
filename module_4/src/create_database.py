@@ -12,6 +12,14 @@ PG_DATA = r"C:\PostgreSQL\18\data"
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 def start_postgres():
+    """Start the local PostgreSQL server if it is not already running.
+
+    Skips startup when ``DATABASE_URL`` is set (remote database in use).
+
+    :returns: ``None``
+    :rtype: None
+    :raises RuntimeError: If ``pg_ctl start`` exits with a non-zero code.
+    """
     if os.environ.get("DATABASE_URL"):
         print("DATABASE_URL set; skipping local pg_ctl startup.")
         return

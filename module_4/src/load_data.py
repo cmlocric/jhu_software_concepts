@@ -20,6 +20,12 @@ DB_CONFIG = {
 }
 
 def get_db_config():
+    """Return database connection settings from the environment or defaults.
+
+    :returns: ``DATABASE_URL`` connection string if set, otherwise the
+        ``DB_CONFIG`` dictionary.
+    :rtype: str | dict
+    """
     database_url = os.environ.get("DATABASE_URL")
     if database_url:
         return database_url
@@ -34,6 +40,13 @@ DEFAULT_JSON_FILE = (r"C:\Users\hz98yb\Training_Files\jhu_software_concepts\modu
 DEFAULT_TABLE_NAME = "applicants"
 
 def clean_obj(obj):
+    """Recursively normalize string encoding in nested JSON structures.
+
+    :param obj: JSON-compatible value (dict, list, str, or scalar).
+    :type obj: object
+    :returns: Copy of ``obj`` with strings re-encoded via cp1252.
+    :rtype: object
+    """
     if isinstance(obj, dict):
         return {k: clean_obj(v) for k, v in obj.items()}
     if isinstance(obj, list):
@@ -43,6 +56,13 @@ def clean_obj(obj):
     return obj
 
 def parse_float(value):
+    """Parse a value as a float, returning ``None`` on failure.
+
+    :param value: Raw field value from a JSON record.
+    :type value: object
+    :returns: Parsed float, or ``None`` if empty or invalid.
+    :rtype: float | None
+    """
     if value in (None, ""):
         return None
     try:
@@ -51,6 +71,13 @@ def parse_float(value):
         return None
 
 def parse_date(value):
+    """Parse a date string in ``"%B %d, %Y"`` format.
+
+    :param value: Date string (e.g. ``"June 12, 2026"``).
+    :type value: object
+    :returns: Parsed date, or ``None`` if empty or invalid.
+    :rtype: datetime.date | None
+    """
     if value in (None, ""):
         return None
     try:
@@ -59,6 +86,14 @@ def parse_date(value):
         return None
 
 def normalize_records(parsed):
+    """Convert parsed JSON into a flat list of cleaned record dicts.
+
+    :param parsed: Top-level JSON object or list from a file.
+    :type parsed: dict | list
+    :returns: List of applicant record dictionaries.
+    :rtype: list[dict]
+    :raises TypeError: If ``parsed`` is neither a dict nor a list.
+    """
     if isinstance(parsed, list):
         return [clean_obj(row) for row in parsed if isinstance(row, dict)]
 
@@ -75,6 +110,13 @@ def normalize_records(parsed):
     raise TypeError("JSON must be a dict or list of dicts")
 
 def read_json_or_jsonl(file_path):
+    """Read a JSON array/object file or JSONL file into record dicts.
+
+    :param file_path: Path to the input file.
+    :type file_path: str | pathlib.Path
+    :returns: Normalized list of applicant records.
+    :rtype: list[dict]
+    """
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read().strip()
 
@@ -113,6 +155,15 @@ def read_json_or_jsonl(file_path):
     return data
 
 def pick(row, *keys):
+    """Return the first non-empty value for any of the given keys.
+
+    :param row: Source record dictionary.
+    :type row: dict
+    :param keys: Candidate field names, tried in order.
+    :type keys: str
+    :returns: First matching value, or ``None`` if none found.
+    :rtype: object | None
+    """
     for key in keys:
         if key in row and row[key] not in (None, ""):
             return row[key]
@@ -123,6 +174,21 @@ def load_json_to_postgres(
     table_name=DEFAULT_TABLE_NAME,
     delete_date=None,
 ):
+    """Load applicant records from JSON/JSONL into a PostgreSQL table.
+
+    Creates the destination table and unique index if they do not exist.
+    Optionally deletes existing rows for a given date before inserting.
+
+    :param json_file: Path to the JSON or JSONL input file.
+    :type json_file: str | pathlib.Path
+    :param table_name: Destination PostgreSQL table name.
+    :type table_name: str
+    :param delete_date: If set, delete rows with this ``date_added``
+        (``YYYY-MM-DD``) before insert.
+    :type delete_date: str | None
+    :returns: ``None``
+    :rtype: None
+    """
     data = read_json_or_jsonl(json_file)
 
     print("Top-level normalized type:", type(data).__name__)
