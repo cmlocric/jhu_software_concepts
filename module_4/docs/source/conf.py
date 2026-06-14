@@ -14,7 +14,9 @@ release = '1'
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("../../src"))
+# Resolve src relative to this file so imports work on Read the Docs and locally.
+SRC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "src"))
+sys.path.insert(0, SRC_DIR)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

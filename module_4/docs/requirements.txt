@@ -1,2 +1,4 @@
 sphinx
 sphinx-rtd-theme
+Flask>=3.1
+psycopg[binary]>=3.3

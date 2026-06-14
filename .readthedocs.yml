@@ -10,17 +10,10 @@ build:
   tools:
     python: "3.13"
 
-python: 
+python:
   install:
     - requirements: module_4/docs/requirements.txt
 
-# Build documentation in the "docs/" directory with Sphinx
 sphinx:
-   configuration: module_4/docs/source/conf.py
-
-# Optionally, but recommended,
-# declare the Python requirements required to build your documentation
-# See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
-# python:
-#    install:
-#    - requirements: docs/requirements.txt
+  configuration: module_4/docs/source/conf.py
+  fail_on_warning: false
