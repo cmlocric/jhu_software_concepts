@@ -373,7 +373,12 @@ def create_app(test_config=None):
 
     return app
 
-app = create_app()
+def _building_docs() -> bool:
+    """Return True when Sphinx or Read the Docs is generating API docs."""
+    return os.environ.get("READTHEDOCS") == "True" or "sphinx" in sys.modules
+
+if not _building_docs():
+    app = create_app()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)

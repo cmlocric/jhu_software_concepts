@@ -16,12 +16,16 @@ import sys
 
 # Resolve src relative to this file so imports work on Read the Docs and locally.
 SRC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "src"))
-sys.path.insert(0, SRC_DIR)
+if SRC_DIR not in sys.path:
+    sys.path.insert(0, SRC_DIR)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = ['sphinx.ext.autodoc']
+
+# Avoid requiring a live PostgreSQL driver during autodoc on Read the Docs.
+autodoc_mock_imports = ['psycopg']
 
 # Document modules in the order they appear in the source files.
 autodoc_member_order = 'bysource'
@@ -35,3 +39,9 @@ language = 'en'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_rtd_theme'
+
+
+def setup(app):
+    """Fail fast if Sphinx cannot locate the Python source tree."""
+    if not os.path.isdir(SRC_DIR):
+        raise RuntimeError(f"Sphinx source path does not exist: {SRC_DIR}")
