@@ -19,7 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="app — Flask application" href="api/app.html" /> 
+    <link rel="next" title="Getting Started" href="getting_started.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,7 +41,13 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api/app.html"><code class="docutils literal notranslate"><span class="pre">app</span></code> — Flask application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/db_config.html"><code class="docutils literal notranslate"><span class="pre">db_config</span></code> — database connection settings</a></li>
@@ -78,8 +84,39 @@
 <h1>Module 4 — Applicant Data Pipeline<a class="headerlink" href="#module-4-applicant-data-pipeline" title="Link to this heading"></a></h1>
 <p>Flask application that scrapes Grad Cafe applicant data, loads it into PostgreSQL,
 and displays SQL analysis results.</p>
-<p>Use the <strong>API Reference</strong> section in the sidebar to browse documented modules and
-their Sphinx docstrings.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#project-layout">Project layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#setup">Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#environment-variables">Environment variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#create-the-database">Create the database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#run-the-flask-app">Run the Flask app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#run-tests">Run tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#build-documentation">Build documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#typical-workflow">Typical workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#web-layer">Web layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#etl-layer">ETL layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#database-layer">Database layer</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#markers">Markers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#selectors">Selectors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#fixtures">Fixtures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#test-doubles">Test doubles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#running-tests-by-layer">Running tests by layer</a></li>
+</ul>
+</li>
+</ul>
+</div>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -135,7 +172,7 @@ their Sphinx docstrings.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="api/app.html" class="btn btn-neutral float-right" title="app — Flask application" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="getting_started.html" class="btn btn-neutral float-right" title="Getting Started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

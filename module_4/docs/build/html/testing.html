@@ -1,0 +1,325 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Testing Guide &mdash; Module_4 assignment - Flask app db backend with tests 1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=29a6c3e3"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="app — Flask application" href="api/app.html" />
+    <link rel="prev" title="Architecture" href="architecture.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Module_4 assignment - Flask app db backend with tests
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Testing Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#markers">Markers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#selectors">Selectors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fixtures">Fixtures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#test-doubles">Test doubles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-tests-by-layer">Running tests by layer</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/app.html"><code class="docutils literal notranslate"><span class="pre">app</span></code> — Flask application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/db_config.html"><code class="docutils literal notranslate"><span class="pre">db_config</span></code> — database connection settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/query_data.html"><code class="docutils literal notranslate"><span class="pre">query_data</span></code> — SQL analysis queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/load_data.html"><code class="docutils literal notranslate"><span class="pre">load_data</span></code> — JSON loader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/create_database.html"><code class="docutils literal notranslate"><span class="pre">create_database</span></code> — database initialization</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Module_4 assignment - Flask app db backend with tests</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Testing Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/testing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="testing-guide">
+<h1>Testing Guide<a class="headerlink" href="#testing-guide" title="Link to this heading"></a></h1>
+<p>The test suite lives in <code class="docutils literal notranslate"><span class="pre">tests/</span></code> and uses <strong>pytest</strong>. <code class="docutils literal notranslate"><span class="pre">pytest.ini</span></code> requires
+<strong>100% code coverage</strong> on <code class="docutils literal notranslate"><span class="pre">src/</span></code>:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">addopts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">-q --cov=src --cov-report=term-missing --cov-fail-under=100</span>
+</pre></div>
+</div>
+<p>Run all tests from the project root:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">-m</span> <span class="n">pytest</span> <span class="n">-v</span>
+</pre></div>
+</div>
+<section id="markers">
+<h2>Markers<a class="headerlink" href="#markers" title="Link to this heading"></a></h2>
+<p>Markers are declared in <code class="docutils literal notranslate"><span class="pre">pytest.ini</span></code> and applied at the module level with
+<code class="docutils literal notranslate"><span class="pre">pytestmark</span></code>. Use them to run focused subsets:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">-m</span> <span class="n">pytest</span> <span class="n">-v</span> <span class="n">-m</span> <span class="n">web</span>
+<span class="n">python</span> <span class="n">-m</span> <span class="n">pytest</span> <span class="n">-v</span> <span class="n">-m</span> <span class="n">db</span>
+<span class="n">python</span> <span class="n">-m</span> <span class="n">pytest</span> <span class="n">-v</span> <span class="n">-m</span> <span class="n">integration</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 35.0%" />
+<col style="width: 45.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Marker</p></th>
+<th class="head"><p>Test files</p></th>
+<th class="head"><p>What it covers</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">web</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">test_flask_page.py</span></code>, <code class="docutils literal notranslate"><span class="pre">test_app_helpers.py</span></code>, <code class="docutils literal notranslate"><span class="pre">test_app_remaining.py</span></code>, <code class="docutils literal notranslate"><span class="pre">test_analysis_format.py</span></code>, <code class="docutils literal notranslate"><span class="pre">test_buttons.py</span></code>, <code class="docutils literal notranslate"><span class="pre">test_integration_end_to_end.py</span></code></p></td>
+<td><p>Flask routes, page rendering, and HTTP responses</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">buttons</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">test_buttons.py</span></code></p></td>
+<td><p>Pull Data and Update Analysis button behavior (busy gating, script calls)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">analysis</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">test_analysis_format.py</span></code></p></td>
+<td><p>Formatting and rounding of analysis output in templates</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">db</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">test_query_data.py</span></code>, <code class="docutils literal notranslate"><span class="pre">test_load_data.py</span></code>, <code class="docutils literal notranslate"><span class="pre">test_db_insert.py</span></code>, <code class="docutils literal notranslate"><span class="pre">test_integration_end_to_end.py</span></code></p></td>
+<td><p>Database schema, inserts, selects, and loader logic</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">integration</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">test_integration_end_to_end.py</span></code>, <code class="docutils literal notranslate"><span class="pre">test_db_insert.py</span></code></p></td>
+<td><p>End-to-end pull → update → render flows against a live database</p></td>
+</tr>
+</tbody>
+</table>
+<p>Tests can carry multiple markers. For example, integration tests are tagged
+<code class="docutils literal notranslate"><span class="pre">integration</span></code>, <code class="docutils literal notranslate"><span class="pre">db</span></code>, and <code class="docutils literal notranslate"><span class="pre">web</span></code> because they exercise all three layers.</p>
+</section>
+<section id="selectors">
+<h2>Selectors<a class="headerlink" href="#selectors" title="Link to this heading"></a></h2>
+<p>Web tests locate and assert on rendered HTML using several strategies.</p>
+<p><strong>Stable element identifiers</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">templates/base.html</span></code> exposes <code class="docutils literal notranslate"><span class="pre">data-testid</span></code> attributes for the primary action
+buttons:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">data-testid=&quot;pull-data-btn&quot;</span></code> — Pull Data button</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data-testid=&quot;update-analysis-btn&quot;</span></code> — Update Analysis button</p></li>
+</ul>
+<p>Element IDs used by client-side JavaScript:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">#pull-data-btn</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#update-analysis-btn</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#pull-data-status</span></code> — status message area after Pull Data</p></li>
+</ul>
+<p><strong>CSS classes and structure</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">.question</span></code> — each analysis question block in <code class="docutils literal notranslate"><span class="pre">index.html</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.nav-item</span></code>, <code class="docutils literal notranslate"><span class="pre">.nav-buttons</span></code> — navigation layout</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.content</span></code> — main page content wrapper</p></li>
+</ul>
+<p><strong>Assertion strategies in tests</strong></p>
+<p>Most web tests use the Flask test client and inspect response bodies directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/analysis&quot;</span><span class="p">)</span>
+<span class="n">page</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">as_text</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">assert</span> <span class="s2">&quot;Pull Data&quot;</span> <span class="ow">in</span> <span class="n">page</span>
+<span class="k">assert</span> <span class="s2">&quot;Answer:&quot;</span> <span class="ow">in</span> <span class="n">page</span>
+</pre></div>
+</div>
+<p>Integration tests normalize visible text with <strong>BeautifulSoup</strong> to avoid
+whitespace and HTML-tag noise:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">bs4</span><span class="w"> </span><span class="kn">import</span> <span class="n">BeautifulSoup</span>
+
+<span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="s2">&quot;html.parser&quot;</span><span class="p">)</span>
+<span class="n">page_text</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">soup</span><span class="o">.</span><span class="n">get_text</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">strip</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>This helper (<code class="docutils literal notranslate"><span class="pre">_page_text</span></code> in <code class="docutils literal notranslate"><span class="pre">test_integration_end_to_end.py</span></code>) is used to
+assert on formatted analysis values such as <code class="docutils literal notranslate"><span class="pre">Acceptance</span> <span class="pre">rate:</span> <span class="pre">66.67%</span></code>.</p>
+<p>Route-level tests assert on registered URL rules rather than DOM selectors:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">routes</span> <span class="o">=</span> <span class="p">{</span><span class="n">rule</span><span class="o">.</span><span class="n">rule</span> <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">app_module</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">url_map</span><span class="o">.</span><span class="n">iter_rules</span><span class="p">()}</span>
+<span class="k">assert</span> <span class="s2">&quot;/pull-data&quot;</span> <span class="ow">in</span> <span class="n">routes</span>
+</pre></div>
+</div>
+</section>
+<section id="fixtures">
+<h2>Fixtures<a class="headerlink" href="#fixtures" title="Link to this heading"></a></h2>
+<p>Fixtures are defined in individual test modules (there is no shared <code class="docutils literal notranslate"><span class="pre">conftest.py</span></code>).
+Each module adds <code class="docutils literal notranslate"><span class="pre">src/</span></code> to <code class="docutils literal notranslate"><span class="pre">sys.path</span></code> so <code class="docutils literal notranslate"><span class="pre">app</span></code> and other modules import cleanly.</p>
+<p><strong>Common fixtures</strong></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">app_module</span></code></dt><dd><p>Imports and returns the <code class="docutils literal notranslate"><span class="pre">app</span></code> module via <code class="docutils literal notranslate"><span class="pre">importlib.import_module(&quot;app&quot;)</span></code>.
+Used wherever tests need to monkeypatch module-level helpers or inspect the Flask
+application instance.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">client</span></code></dt><dd><p>Creates a Flask test client with <code class="docutils literal notranslate"><span class="pre">TESTING=True</span></code>. Variants exist with and without
+pre-mocked database calls depending on the test file.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">db_connection</span></code></dt><dd><p>Opens a live PostgreSQL connection to <code class="docutils literal notranslate"><span class="pre">applicant_db</span></code> using <code class="docutils literal notranslate"><span class="pre">DATABASE_URL</span></code> or
+default local credentials. Used by <code class="docutils literal notranslate"><span class="pre">db</span></code> and <code class="docutils literal notranslate"><span class="pre">integration</span></code> tests.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">test_table_name</span></code></dt><dd><p>Generates a unique table name (<code class="docutils literal notranslate"><span class="pre">applicants_test_&lt;uuid&gt;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">applicants_integration_&lt;uuid&gt;</span></code>) to avoid collisions across test runs.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">managed_test_table</span></code></dt><dd><p>Creates an isolated applicants-style table before the test and drops it afterward.
+Lets loader and route tests write real rows without touching production data.</p>
+</dd>
+</dl>
+<p><strong>Built-in pytest fixtures used throughout</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">monkeypatch</span></code> — replace functions, attributes, and environment variables</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tmp_path</span></code> — temporary directories for watermark and JSON file tests</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">capsys</span></code> — capture stdout for CLI <code class="docutils literal notranslate"><span class="pre">main</span></code> block tests</p></li>
+</ul>
+</section>
+<section id="test-doubles">
+<h2>Test doubles<a class="headerlink" href="#test-doubles" title="Link to this heading"></a></h2>
+<p>The suite avoids external services during unit tests by substituting fakes at the
+module boundary.</p>
+<p><strong>``monkeypatch.setattr``</strong></p>
+<p>The primary technique for replacing collaborators:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">monkeypatch</span><span class="o">.</span><span class="n">setattr</span><span class="p">(</span><span class="n">app_module</span><span class="p">,</span> <span class="s2">&quot;run_python_script&quot;</span><span class="p">,</span> <span class="n">fake_run_python_script</span><span class="p">)</span>
+<span class="n">monkeypatch</span><span class="o">.</span><span class="n">setattr</span><span class="p">(</span><span class="n">app_module</span><span class="p">,</span> <span class="s2">&quot;get_db_connection&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">DummyConnection</span><span class="p">())</span>
+<span class="n">monkeypatch</span><span class="o">.</span><span class="n">setattr</span><span class="p">(</span><span class="n">psycopg</span><span class="p">,</span> <span class="s2">&quot;connect&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">connection</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Environment variables are controlled the same way:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">monkeypatch</span><span class="o">.</span><span class="n">setenv</span><span class="p">(</span><span class="s2">&quot;DATABASE_URL&quot;</span><span class="p">,</span> <span class="s2">&quot;postgresql://example-user@example-host/test_db&quot;</span><span class="p">)</span>
+<span class="n">monkeypatch</span><span class="o">.</span><span class="n">delenv</span><span class="p">(</span><span class="s2">&quot;DATABASE_URL&quot;</span><span class="p">,</span> <span class="n">raising</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Dummy connection and cursor classes</strong></p>
+<p>Lightweight stand-ins record calls without opening a real database:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DummyConnection</span></code> / <code class="docutils literal notranslate"><span class="pre">DummyCursor</span></code> in <code class="docutils literal notranslate"><span class="pre">test_query_data.py</span></code> and
+<code class="docutils literal notranslate"><span class="pre">test_create_database.py</span></code> — simulate <code class="docutils literal notranslate"><span class="pre">cursor()</span></code>, <code class="docutils literal notranslate"><span class="pre">execute()</span></code>, <code class="docutils literal notranslate"><span class="pre">fetchall()</span></code>, and <code class="docutils literal notranslate"><span class="pre">close()</span></code></p></li>
+<li><p>Inline <code class="docutils literal notranslate"><span class="pre">DummyConnection</span></code> in <code class="docutils literal notranslate"><span class="pre">test_flask_page.py</span></code> — minimal object with only a <code class="docutils literal notranslate"><span class="pre">close()</span></code> method</p></li>
+</ul>
+<p><strong>Fake subprocess results</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">test_buttons.py</span></code> and integration tests use <code class="docutils literal notranslate"><span class="pre">types.SimpleNamespace</span></code> to mimic
+<code class="docutils literal notranslate"><span class="pre">subprocess.CompletedProcess</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleNamespace</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_completed_process</span><span class="p">(</span><span class="n">returncode</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">SimpleNamespace</span><span class="p">(</span><span class="n">returncode</span><span class="o">=</span><span class="n">returncode</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">stderr</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Fake script runners</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">fake_run_python_script</span></code> functions record which scripts were invoked and return
+successful (or failing) process results without spawning real subprocesses.</p>
+<p><strong>Fake JSON and watermark I/O</strong></p>
+<p>Pull-data tests replace file helpers to return controlled scrape batches:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">monkeypatch</span><span class="o">.</span><span class="n">setattr</span><span class="p">(</span><span class="n">app_module</span><span class="p">,</span> <span class="s2">&quot;read_json_records&quot;</span><span class="p">,</span> <span class="n">fake_read_json_records</span><span class="p">)</span>
+<span class="n">monkeypatch</span><span class="o">.</span><span class="n">setattr</span><span class="p">(</span><span class="n">app_module</span><span class="p">,</span> <span class="s2">&quot;load_watermark&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">monkeypatch</span><span class="o">.</span><span class="n">setattr</span><span class="p">(</span><span class="n">app_module</span><span class="p">,</span> <span class="s2">&quot;save_watermark&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">value</span><span class="p">:</span> <span class="n">saved</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+</pre></div>
+</div>
+<p><strong>Module reload for isolation</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">test_query_data.py</span></code> uses <code class="docutils literal notranslate"><span class="pre">import_fresh_query_data()</span></code> to pop <code class="docutils literal notranslate"><span class="pre">query_data</span></code> from
+<code class="docutils literal notranslate"><span class="pre">sys.modules</span></code> and re-import after patching <code class="docutils literal notranslate"><span class="pre">psycopg.connect</span></code>, ensuring each test
+gets a clean module state.</p>
+<p><strong>Live database in integration tests</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">test_integration_end_to_end.py</span></code> and <code class="docutils literal notranslate"><span class="pre">test_db_insert.py</span></code> combine real PostgreSQL
+connections with faked scrape/clean subprocesses. Only the ETL scripts are doubled;
+the loader and query layer run against an isolated test table created by the
+<code class="docutils literal notranslate"><span class="pre">managed_test_table</span></code> fixture.</p>
+</section>
+<section id="running-tests-by-layer">
+<h2>Running tests by layer<a class="headerlink" href="#running-tests-by-layer" title="Link to this heading"></a></h2>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="c"># Fast unit tests (no live database required for most web tests)</span>
+<span class="n">python</span> <span class="n">-m</span> <span class="n">pytest</span> <span class="n">-v</span> <span class="n">-m</span> <span class="s2">&quot;web and not db&quot;</span>
+
+<span class="c"># Database unit tests</span>
+<span class="n">python</span> <span class="n">-m</span> <span class="n">pytest</span> <span class="n">-v</span> <span class="n">-m</span> <span class="s2">&quot;db and not integration&quot;</span>
+
+<span class="c"># Full integration (requires PostgreSQL and DATABASE_URL / PG* vars)</span>
+<span class="n">python</span> <span class="n">-m</span> <span class="n">pytest</span> <span class="n">-v</span> <span class="n">-m</span> <span class="n">integration</span>
+</pre></div>
+</div>
+<p>Ensure PostgreSQL is running and environment variables are set before running
+<code class="docutils literal notranslate"><span class="pre">db</span></code> or <code class="docutils literal notranslate"><span class="pre">integration</span></code> markers.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="architecture.html" class="btn btn-neutral float-left" title="Architecture" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api/app.html" class="btn btn-neutral float-right" title="app — Flask application" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Chris Locricchio.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

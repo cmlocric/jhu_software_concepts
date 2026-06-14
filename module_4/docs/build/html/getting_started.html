@@ -1,0 +1,408 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Getting Started &mdash; Module_4 assignment - Flask app db backend with tests 1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=29a6c3e3"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Architecture" href="architecture.html" />
+    <link rel="prev" title="Module 4 — Applicant Data Pipeline" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Module_4 assignment - Flask app db backend with tests
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#project-layout">Project layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setup">Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#environment-variables">Environment variables</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#option-a-single-connection-url-recommended">Option A — single connection URL (recommended)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#option-b-individual-variables">Option B — individual variables</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#create-the-database">Create the database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-the-flask-app">Run the Flask app</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#full-pull-data-pipeline">Full Pull Data pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#run-tests">Run tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#build-documentation">Build documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#typical-workflow">Typical workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/app.html"><code class="docutils literal notranslate"><span class="pre">app</span></code> — Flask application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/db_config.html"><code class="docutils literal notranslate"><span class="pre">db_config</span></code> — database connection settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/query_data.html"><code class="docutils literal notranslate"><span class="pre">query_data</span></code> — SQL analysis queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/load_data.html"><code class="docutils literal notranslate"><span class="pre">load_data</span></code> — JSON loader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/create_database.html"><code class="docutils literal notranslate"><span class="pre">create_database</span></code> — database initialization</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Module_4 assignment - Flask app db backend with tests</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Getting Started</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/getting_started.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>This project is a Flask dashboard for <strong>Grad Cafe applicant data</strong>. It scrapes raw
+records, cleans them with a local LLM service, loads them into PostgreSQL, and
+displays SQL analysis results in the browser.</p>
+<p>The end-to-end flow is:</p>
+<ol class="arabic simple">
+<li><p><strong>Scrape</strong> raw applicant records (<code class="docutils literal notranslate"><span class="pre">src/module_2/scrape.py</span></code>)</p></li>
+<li><p><strong>Clean</strong> program and university names via a local LLM API
+(<code class="docutils literal notranslate"><span class="pre">src/module_2/clean.py</span></code> + <code class="docutils literal notranslate"><span class="pre">src/module_2/llm_hosting/</span></code>)</p></li>
+<li><p><strong>Load</strong> cleaned JSON into PostgreSQL (<code class="docutils literal notranslate"><span class="pre">src/load_data.py</span></code>)</p></li>
+<li><p><strong>Query</strong> the database for summary statistics (<code class="docutils literal notranslate"><span class="pre">src/query_data.py</span></code>)</p></li>
+<li><p><strong>Display</strong> results in a Flask dashboard (<code class="docutils literal notranslate"><span class="pre">src/app.py</span></code>)</p></li>
+</ol>
+</section>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Python 3.11+</strong></p></li>
+<li><p><strong>PostgreSQL</strong> installed and running</p></li>
+<li><p><strong>Google Chrome</strong> (required by Selenium for scraping)</p></li>
+<li><p>For the full <strong>Pull Data</strong> pipeline: the <strong>LLM hosting service</strong> on port <code class="docutils literal notranslate"><span class="pre">8080</span></code></p></li>
+</ul>
+</section>
+<section id="project-layout">
+<h2>Project layout<a class="headerlink" href="#project-layout" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>module_4/
+├── src/
+│   ├── app.py                 # Flask app and pipeline orchestration
+│   ├── create_database.py     # Start PostgreSQL (local) and create applicant_db
+│   ├── db_config.py           # Shared database connection settings
+│   ├── load_data.py           # JSON/JSONL → PostgreSQL loader
+│   ├── query_data.py          # Analysis SQL queries
+│   ├── json_files/            # Scraped, cleaned, and watermark files
+│   ├── templates/             # Flask HTML templates
+│   └── module_2/
+│       ├── scrape.py          # Grad Cafe scraper
+│       ├── clean.py           # Batch cleaner (calls LLM service)
+│       └── llm_hosting/       # Local LLM standardizer service
+├── tests/                     # Pytest suite (100% coverage required)
+├── docs/                      # Sphinx documentation
+├── requirements.txt           # Full project dependencies
+└── pytest.ini
+</pre></div>
+</div>
+</section>
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading"></a></h2>
+<p>Create and activate a virtual environment from the project root (<code class="docutils literal notranslate"><span class="pre">module_4/</span></code>):</p>
+<p><strong>Windows (PowerShell):</strong></p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">-m</span> <span class="n">venv</span> <span class="p">.</span><span class="n">venv</span>
+<span class="p">.\.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">Activate</span><span class="p">.</span><span class="n">ps1</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">-r</span> <span class="n">requirements</span><span class="p">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+<p><strong>macOS / Linux:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
+<span class="nb">source</span><span class="w"> </span>.venv/bin/activate
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+</pre></div>
+</div>
+</section>
+<section id="environment-variables">
+<h2>Environment variables<a class="headerlink" href="#environment-variables" title="Link to this heading"></a></h2>
+<p>Connection settings are read from environment variables via <code class="docutils literal notranslate"><span class="pre">db_config.py</span></code>.</p>
+<section id="option-a-single-connection-url-recommended">
+<h3>Option A — single connection URL (recommended)<a class="headerlink" href="#option-a-single-connection-url-recommended" title="Link to this heading"></a></h3>
+<p><strong>Windows (PowerShell):</strong></p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nv">$env:DATABASE_URL</span> <span class="p">=</span> <span class="s2">&quot;postgresql://YOUR_USER@localhost:5432/applicant_db&quot;</span>
+</pre></div>
+</div>
+<p><strong>macOS / Linux:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://YOUR_USER@localhost:5432/applicant_db&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="option-b-individual-variables">
+<h3>Option B — individual variables<a class="headerlink" href="#option-b-individual-variables" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 15.0%" />
+<col style="width: 55.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PGUSER</span></code> or <code class="docutils literal notranslate"><span class="pre">POSTGRES_USER</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">postgres</span></code></p></td>
+<td><p>Database user</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PGHOST</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">localhost</span></code></p></td>
+<td><p>Database host</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PGPORT</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">5432</span></code></p></td>
+<td><p>Database port</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PGDATABASE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">applicant_db</span></code></p></td>
+<td><p>Database name</p></td>
+</tr>
+</tbody>
+</table>
+<p>Additional variables used by other components:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 20.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Used by</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PG_CTL</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">create_database.py</span></code></p></td>
+<td><p>Path to <code class="docutils literal notranslate"><span class="pre">pg_ctl</span></code> (Windows local startup)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PGDATA</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">create_database.py</span></code></p></td>
+<td><p>PostgreSQL data directory</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GRADCAFE_PROXY</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">scrape.py</span></code></p></td>
+<td><p>Optional HTTP proxy for scraping</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">HTTP_PROXY</span></code> / <code class="docutils literal notranslate"><span class="pre">HTTPS_PROXY</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">scrape.py</span></code></p></td>
+<td><p>Standard proxy fallback</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PORT</span></code></p></td>
+<td><p>LLM hosting</p></td>
+<td><p>LLM service port (default <code class="docutils literal notranslate"><span class="pre">8080</span></code>)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="create-the-database">
+<h2>Create the database<a class="headerlink" href="#create-the-database" title="Link to this heading"></a></h2>
+<p>Run once from <code class="docutils literal notranslate"><span class="pre">src/</span></code> to start local PostgreSQL (Windows only, when
+<code class="docutils literal notranslate"><span class="pre">DATABASE_URL</span></code> is not set) and create <code class="docutils literal notranslate"><span class="pre">applicant_db</span></code>:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd </span><span class="n">src</span>
+<span class="n">python</span> <span class="n">create_database</span><span class="p">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>When <code class="docutils literal notranslate"><span class="pre">DATABASE_URL</span></code> is set, <code class="docutils literal notranslate"><span class="pre">create_database.py</span></code> skips local <code class="docutils literal notranslate"><span class="pre">pg_ctl</span></code> startup
+and connects using your URL instead.</p>
+</section>
+<section id="run-the-flask-app">
+<h2>Run the Flask app<a class="headerlink" href="#run-the-flask-app" title="Link to this heading"></a></h2>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd </span><span class="n">src</span>
+<span class="n">python</span> <span class="n">app</span><span class="p">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>The app starts at <strong>http://127.0.0.1:8000</strong>. Open <strong>http://127.0.0.1:8000/analysis</strong>
+in your browser.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 15.0%" />
+<col style="width: 65.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Route</p></th>
+<th class="head"><p>Method</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/analysis</span></code></p></td>
+<td><p>GET</p></td>
+<td><p>View analysis query results</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/pull-data</span></code></p></td>
+<td><p>POST</p></td>
+<td><p>Run scrape → clean → load pipeline</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/update-analysis</span></code></p></td>
+<td><p>POST</p></td>
+<td><p>Re-run analysis queries</p></td>
+</tr>
+</tbody>
+</table>
+<section id="full-pull-data-pipeline">
+<h3>Full Pull Data pipeline<a class="headerlink" href="#full-pull-data-pipeline" title="Link to this heading"></a></h3>
+<p>The cleaner calls a local LLM service. Start it in a <strong>separate terminal</strong> before
+using <strong>Pull Data</strong>:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd </span><span class="n">src</span><span class="p">/</span><span class="n">module_2</span><span class="p">/</span><span class="n">llm_hosting</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">-r</span> <span class="n">requirements</span><span class="p">.</span><span class="n">txt</span>
+<span class="n">python</span> <span class="n">app</span><span class="p">.</span><span class="n">py</span> <span class="p">-</span><span class="n">-serve</span>
+</pre></div>
+</div>
+<p>The LLM service listens on <strong>http://127.0.0.1:8080</strong> by default.</p>
+</section>
+</section>
+<section id="run-tests">
+<h2>Run tests<a class="headerlink" href="#run-tests" title="Link to this heading"></a></h2>
+<p>From the project root with the virtual environment activated:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">-m</span> <span class="n">pytest</span> <span class="n">-v</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">pytest.ini</span></code> enforces <strong>100% code coverage</strong> on <code class="docutils literal notranslate"><span class="pre">src/</span></code>:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">addopts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">-q --cov=src --cov-report=term-missing --cov-fail-under=100</span>
+</pre></div>
+</div>
+<p>Run a subset of tests by marker:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">-m</span> <span class="n">pytest</span> <span class="n">-v</span> <span class="n">-m</span> <span class="n">web</span>          <span class="c"># Flask routes</span>
+<span class="n">python</span> <span class="n">-m</span> <span class="n">pytest</span> <span class="n">-v</span> <span class="n">-m</span> <span class="n">db</span>           <span class="c"># Database tests (requires PostgreSQL)</span>
+<span class="n">python</span> <span class="n">-m</span> <span class="n">pytest</span> <span class="n">-v</span> <span class="n">-m</span> <span class="n">integration</span>  <span class="c"># End-to-end flows</span>
+</pre></div>
+</div>
+<p>Database tests use the same <code class="docutils literal notranslate"><span class="pre">DATABASE_URL</span></code> / <code class="docutils literal notranslate"><span class="pre">PG*</span></code> environment variables
+described above.</p>
+</section>
+<section id="build-documentation">
+<h2>Build documentation<a class="headerlink" href="#build-documentation" title="Link to this heading"></a></h2>
+<p>Doc packages are included in the root <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code>. To install docs only:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">-r</span> <span class="n">docs</span><span class="p">/</span><span class="n">requirements</span><span class="p">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+<p><strong>Windows (PowerShell):</strong></p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd </span><span class="n">docs</span>
+<span class="nv">$env:SPHINXBUILD</span> <span class="p">=</span> <span class="s2">&quot;..\.venv\Scripts\sphinx-build.exe&quot;</span>
+<span class="p">.\</span><span class="n">make</span><span class="p">.</span><span class="n">bat</span> <span class="n">html</span>
+</pre></div>
+</div>
+<p><strong>macOS / Linux / WSL:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>docs
+make<span class="w"> </span>html
+</pre></div>
+</div>
+<p>Open <code class="docutils literal notranslate"><span class="pre">docs/build/html/index.html</span></code> in a browser to view the generated site.</p>
+</section>
+<section id="typical-workflow">
+<h2>Typical workflow<a class="headerlink" href="#typical-workflow" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Activate the virtual environment and set database environment variables.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">create_database.py</span></code> from <code class="docutils literal notranslate"><span class="pre">src/</span></code> (first time only).</p></li>
+<li><p>Start the LLM service (<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">app.py</span> <span class="pre">--serve</span></code> in <code class="docutils literal notranslate"><span class="pre">src/module_2/llm_hosting/</span></code>).</p></li>
+<li><p>Start the Flask app (<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">app.py</span></code> from <code class="docutils literal notranslate"><span class="pre">src/</span></code>).</p></li>
+<li><p>Open <strong>http://127.0.0.1:8000/analysis</strong>.</p></li>
+<li><p>Click <strong>Pull Data</strong> to scrape, clean, and load new records.</p></li>
+<li><p>Click <strong>Update Analysis</strong> (or refresh) to refresh displayed statistics.</p></li>
+</ol>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt><strong>``role “postgres” does not exist``</strong></dt><dd><p>Set <code class="docutils literal notranslate"><span class="pre">PGUSER</span></code> or <code class="docutils literal notranslate"><span class="pre">DATABASE_URL</span></code> to a valid PostgreSQL user on your machine.</p>
+</dd>
+<dt><strong>Flask starts but analysis page fails</strong></dt><dd><p>Confirm PostgreSQL is running and <code class="docutils literal notranslate"><span class="pre">applicant_db</span></code> exists. Test with
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">query_data.py</span></code> from <code class="docutils literal notranslate"><span class="pre">src/</span></code>.</p>
+</dd>
+<dt><strong>Pull Data fails at clean step</strong></dt><dd><p>Ensure the LLM hosting service is running on port <code class="docutils literal notranslate"><span class="pre">8080</span></code>.</p>
+</dd>
+<dt><strong>Scraper fails behind a firewall</strong></dt><dd><p>Set <code class="docutils literal notranslate"><span class="pre">GRADCAFE_PROXY</span></code>, <code class="docutils literal notranslate"><span class="pre">HTTP_PROXY</span></code>, or <code class="docutils literal notranslate"><span class="pre">HTTPS_PROXY</span></code>.</p>
+</dd>
+</dl>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Module 4 — Applicant Data Pipeline" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="architecture.html" class="btn btn-neutral float-right" title="Architecture" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Chris Locricchio.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

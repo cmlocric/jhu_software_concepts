@@ -4,8 +4,13 @@ Module 4 — Applicant Data Pipeline
 Flask application that scrapes Grad Cafe applicant data, loads it into PostgreSQL,
 and displays SQL analysis results.
 
-Use the **API Reference** section in the sidebar to browse documented modules and
-their Sphinx docstrings.
+.. toctree::
+   :maxdepth: 2
+   :caption: User Guide
+
+   getting_started
+   architecture
+   testing
 
 .. toctree::
    :maxdepth: 2
