@@ -1,28 +1,18 @@
-.. Module_4 assignment - Flask app  db backend with tests documentation master file, created by
-   sphinx-quickstart on Thu Jun 11 14:56:01 2026.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Module 4 — Applicant Data Pipeline
+==================================
 
-Module_4 assignment - Flask app  db backend with tests documentation
-====================================================================
+Flask application that scrapes Grad Cafe applicant data, loads it into PostgreSQL,
+and displays SQL analysis results.
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
-
-.. automodule:: app
-   :members:
-
-.. automodule:: query_data
-   :members:
-
-.. automodule:: create_database
-   :members:
-
-.. automodule:: load_data
-   :members:
+Use the **API Reference** section in the sidebar to browse documented modules and
+their Sphinx docstrings.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: API Reference
 
+   api/app
+   api/db_config
+   api/query_data
+   api/load_data
+   api/create_database

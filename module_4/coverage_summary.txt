@@ -1,32 +1,35 @@
-=========================================== test session starts ============================================
+
+===================================================================================== test session starts =====================================================================================
 platform win32 -- Python 3.14.5, pytest-9.0.3, pluggy-1.6.0
 rootdir: C:\Users\hz98yb\Training_Files\jhu_software_concepts\module_4
 configfile: pytest.ini
 plugins: anyio-4.13.0, cov-7.1.0
-collected 66 items                                                                                           
+collected 74 items                                                                                                                                                                             
 
-tests\test_analysis_format.py ...                                                                      [  4%]
-tests\test_app_helpers.py ......................                                                       [ 37%]
-tests\test_app_remaining.py ......                                                                     [ 46%]
-tests\test_buttons.py ....                                                                             [ 53%]
-tests\test_create_database_unit.py .....                                                               [ 60%]
-tests\test_db_insert.py ...                                                                            [ 65%]
-tests\test_flask_page.py ...                                                                           [ 69%]
-tests\test_integration_end_to_end.py ..                                                                [ 72%]
-tests\test_load_data.py ........                                                                       [ 84%]
-tests\test_query_data.py ..........                                                                    [100%]
+tests\test_analysis_format.py ......                                                                                                                                                     [  8%]
+tests\test_app_helpers.py ......................                                                                                                                                         [ 37%]
+tests\test_app_remaining.py ......                                                                                                                                                       [ 45%]
+tests\test_buttons.py ....                                                                                                                                                               [ 51%]
+tests\test_create_database.py ......                                                                                                                                                     [ 59%]
+tests\test_db_config.py ....                                                                                                                                                             [ 64%]
+tests\test_db_insert.py ...                                                                                                                                                              [ 68%]
+tests\test_flask_page.py ...                                                                                                                                                             [ 72%]
+tests\test_integration_end_to_end.py ..                                                                                                                                                  [ 75%]
+tests\test_load_data.py ........                                                                                                                                                         [ 86%] 
+tests\test_query_data.py ..........                                                                                                                                                      [100%] 
 
-============================================== tests coverage ===============================================
-______________________________ coverage: platform win32, python 3.14.5-final-0 ______________________________
+======================================================================================= tests coverage ======================================================================================== 
+_______________________________________________________________________ coverage: platform win32, python 3.14.5-final-0 _______________________________________________________________________ 
 
 Name                     Stmts   Miss  Cover   Missing
 ------------------------------------------------------
 src\__init__.py              0      0   100%
-src\app.py                 153      0   100%
-src\create_database.py      37      0   100%
-src\load_data.py           116      0   100%
-src\query_data.py           39      0   100%
+src\app.py                 171      0   100%
+src\create_database.py      39      0   100%
+src\db_config.py            23      0   100%
+src\load_data.py           109      0   100%
+src\query_data.py           33      0   100%
 ------------------------------------------------------
-TOTAL                      345      0   100%
+TOTAL                      375      0   100%
 Required test coverage of 100% reached. Total coverage: 100.00%
-============================================ 66 passed in 6.10s =============================================
+===================================================================================== 74 passed in 4.09s ====================================================================================== 

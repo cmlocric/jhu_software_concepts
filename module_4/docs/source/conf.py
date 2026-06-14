@@ -21,6 +21,9 @@ sys.path.insert(0, os.path.abspath("../../src"))
 
 extensions = ['sphinx.ext.autodoc']
 
+# Document modules in the order they appear in the source files.
+autodoc_member_order = 'bysource'
+
 templates_path = ['_templates']
 exclude_patterns = []
 
