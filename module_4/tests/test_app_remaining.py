@@ -100,7 +100,8 @@ def test_get_db_connection_calls_psycopg_connect(monkeypatch):
     result = app_module.get_db_connection(dbname="applicant_db", user="postgres")
 
     assert result is fake_connection
-    assert captured == {"dbname": "applicant_db", "user": "postgres"}
+    assert captured["dbname"] == "applicant_db"
+    assert captured["user"] == "postgres"
 
 def test_format_analysis_value_formats_nested_list_values(monkeypatch):
     app_module = fresh_app_module(monkeypatch)

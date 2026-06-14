@@ -96,7 +96,7 @@ def managed_test_table(db_connection, test_table_name):
                 program text,
                 comments text,
                 date_added date,
-                url text,
+                url text UNIQUE,
                 status text,
                 term text,
                 us_or_international text,
@@ -376,21 +376,12 @@ def test_duplicate_pulls_do_not_create_duplicate_rows(
     test_table = managed_test_table
     raw_rows = _sample_raw_rows()
 
-    # Add a uniqueness policy for the test table.
-    #
-    # Adjust these columns if your real uniqueness policy is different.
+    # Add a uniqueness policy for the test table based on applicant URL.
     with db_connection.cursor() as cur:
         cur.execute(
             f"""
-            CREATE UNIQUE INDEX IF NOT EXISTS {test_table}_uniq_idx
-            ON {test_table} (
-                program,
-                date_added,
-                url,
-                status,
-                term,
-                degree
-            )
+            CREATE UNIQUE INDEX IF NOT EXISTS {test_table}_url_uniq_idx
+            ON {test_table} (url)
             """
         )
     db_connection.commit()

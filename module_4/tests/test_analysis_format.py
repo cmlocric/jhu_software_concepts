@@ -54,7 +54,7 @@ def client(app_module, monkeypatch):
     monkeypatch.setattr(
         app_module,
         "get_db_connection",
-        lambda dbname, user: DummyConnection(),
+        lambda: DummyConnection(),
     )
 
     original_testing = app_module.app.config.get("TESTING", False)
@@ -129,6 +129,77 @@ def test_percentage_values_are_formatted_with_two_decimals(client, app_module, m
 
     # The raw unrounded value should not appear.
     assert "12.3456" not in page
+
+def test_multi_value_answers_render_all_metrics(client, app_module, monkeypatch):
+    """Verify tuple answers render every label/value pair."""
+    monkeypatch.setattr(
+        app_module,
+        "get_all_query_results",
+        lambda connection: [
+            (
+                "Question 3",
+                (
+                    "Average GPA:",
+                    3.78,
+                    "Average_gre",
+                    325.0,
+                    "Average_gre_v",
+                    160.0,
+                    "Average_gre_aw",
+                    4.5,
+                ),
+            ),
+        ],
+    )
+
+    response = client.get("/analysis")
+    page = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Average GPA: 3.78" in page
+    assert "Average_gre 325.00" in page
+    assert "Average_gre_v 160.00" in page
+    assert "Average_gre_aw 4.50" in page
+
+
+def test_multi_row_answers_render_each_row(client, app_module, monkeypatch):
+    """Verify list/tuple answers render one line per result row."""
+    monkeypatch.setattr(
+        app_module,
+        "get_all_query_results",
+        lambda connection: [
+            (
+                "Question 10",
+                [
+                    ("American", 100, 25, 25.0),
+                    ("International", 80, 20, 25.0),
+                ],
+            ),
+        ],
+    )
+
+    response = client.get("/analysis")
+    page = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "American" in page
+    assert "International" in page
+
+
+def test_format_analysis_answer_lines_handles_scalar_and_nested_values(monkeypatch):
+    app_module = importlib.import_module("app")
+
+    assert app_module.format_analysis_answer_lines(None) == ["None"]
+    assert app_module.format_analysis_answer_lines("plain") == ["plain"]
+    assert app_module.format_analysis_answer_lines(7) == ["7"]
+    assert app_module.format_analysis_answer_lines(("Label:", "value")) == ["Label: value"]
+    assert app_module.format_analysis_answer_lines([("A", 1), ("B", 2)]) == ["A 1", "B 2"]
+    assert app_module.format_analysis_answer_lines([1, 2]) == ["1", "2"]
+    assert app_module.format_analysis_answer_lines(("A", 1, "extra")) == ["A 1 extra"]
+    result = app_module.format_analysis_answer_lines(object())
+    assert len(result) == 1
+    assert result[0].startswith("<object object at")
+
 
 def test_percentage_values_keep_trailing_zero_to_two_decimals(client, app_module, monkeypatch):
     """Verify that percentage values keep trailing zeros when needed.

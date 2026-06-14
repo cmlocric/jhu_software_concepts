@@ -6,11 +6,12 @@ from datetime import datetime
 from pathlib import Path
 from threading import Lock
 
-import psycopg
 from flask import Flask, jsonify, render_template
 
 from query_data import get_all_query_results
 from create_database import start_postgres
+from db_config import connect
+import db_config
 
 BASE_DIR = Path(__file__).resolve().parent
 SCRAPE_SCRIPT = BASE_DIR / "module_2" / "scrape.py"
@@ -28,10 +29,10 @@ pull_data_lock = Lock()
 def get_database_url() -> str:
     """Return the PostgreSQL connection URL for the Flask app.
 
-    :returns: ``DATABASE_URL`` environment variable, or a local default.
+    :returns: Connection URL derived from environment variables.
     :rtype: str
     """
-    return os.environ.get("DATABASE_URL", "postgresql://postgres@localhost/applicant_db")
+    return db_config.get_database_url()
 
 def try_start_pull_data() -> bool:
     """Attempt to acquire the pull-data lock.
@@ -77,13 +78,13 @@ def get_db_connection(dbname=None, user=None):
     :rtype: psycopg.Connection
     """
     if dbname is not None or user is not None:
-        kwargs = {}
+        overrides = {}
         if dbname is not None:
-            kwargs["dbname"] = dbname
+            overrides["dbname"] = dbname
         if user is not None:
-            kwargs["user"] = user
-        return psycopg.connect(**kwargs)
-    return psycopg.connect(get_database_url())
+            overrides["user"] = user
+        return connect(**overrides)
+    return connect()
 
 def run_python_script(script_path: Path, *args: str):
     """Run a Python script as a subprocess and capture its output.
@@ -195,6 +196,34 @@ def format_analysis_value(value):
         return [format_analysis_value(v) for v in value]
     return value
 
+def format_analysis_answer_lines(answer):
+    """Convert a query answer into human-readable lines for the template.
+
+    :param answer: Scalar, tuple, or list returned by ``execute_query``.
+    :type answer: object
+    :returns: List of display strings.
+    :rtype: list[str]
+    """
+    if answer is None:
+        return ["None"]
+    if isinstance(answer, str):
+        return [answer]
+    if isinstance(answer, (int, float)):
+        return [str(answer)]
+    if isinstance(answer, tuple):
+        if (
+            len(answer) >= 2
+            and len(answer) % 2 == 0
+            and all(isinstance(answer[index], str) for index in range(0, len(answer), 2))
+        ):
+            return [f"{answer[index]} {answer[index + 1]}" for index in range(0, len(answer), 2)]
+        return [" ".join(str(item) for item in answer)]
+    if isinstance(answer, list):
+        if answer and isinstance(answer[0], tuple):
+            return [" ".join(str(item) for item in row) for row in answer]
+        return [str(item) for item in answer]
+    return [str(answer)]
+
 def create_app(test_config=None):
     """Create and configure the Flask application.
 
@@ -217,11 +246,11 @@ def create_app(test_config=None):
         :returns: Rendered ``index.html`` template with query results.
         :rtype: str
         """
-        connection = get_db_connection(dbname="applicant_db", user="postgres")
+        connection = get_db_connection()
         try:
             query_results = get_all_query_results(connection)
             query_results = [
-                (question, format_analysis_value(answer))
+                (question, format_analysis_answer_lines(format_analysis_value(answer)))
                 for question, answer in query_results
             ]
             return render_template("index.html", query_results=query_results)

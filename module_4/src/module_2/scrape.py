@@ -24,9 +24,9 @@ BASE_URL = "https://www.thegradcafe.com"
 SURVEY_URL = f"{BASE_URL}/survey"
 
 # ---------------------------------------------------------------------
-# Corporate proxy configuration
+# Optional proxy configuration
 # ---------------------------------------------------------------------
-PROXY = "http://naproxy.gm.com:8080"
+PROXY = os.environ.get("GRADCAFE_PROXY") or os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY") or ""
 
 # ---------------------------------------------------------------------
 # HTTP client setup for non-browser requests

@@ -515,7 +515,7 @@ def test_analysis_route_uses_formatted_query_results(client, app_module, monkeyp
     monkeypatch.setattr(
         app_module,
         "get_db_connection",
-        lambda dbname, user: DummyConnection(),
+        lambda dbname=None, user=None: DummyConnection(),
     )
     monkeypatch.setattr(
         app_module,

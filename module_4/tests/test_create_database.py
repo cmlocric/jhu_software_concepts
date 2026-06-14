@@ -163,10 +163,12 @@ def test_main_creates_database_when_missing(monkeypatch, capsys):
     sys.modules.pop("create_database", None)
     runpy.run_module("create_database", run_name="__main__")
 
-    assert connect_calls == [
-        {"dbname": "postgres", "user": "postgres", "connect_timeout": 5},
-        {"dbname": "applicant_db", "user": "postgres", "connect_timeout": 5},
-    ]
+    assert connect_calls[0]["dbname"] == "postgres"
+    assert connect_calls[0]["user"] == "postgres"
+    assert connect_calls[0]["connect_timeout"] == 5
+    assert connect_calls[1]["dbname"] == "applicant_db"
+    assert connect_calls[1]["user"] == "postgres"
+    assert connect_calls[1]["connect_timeout"] == 5
 
     assert first_conn.autocommit is True
     assert first_conn.closed is True
@@ -210,10 +212,12 @@ def test_main_skips_create_when_database_already_exists(monkeypatch, capsys):
     sys.modules.pop("create_database", None)
     runpy.run_module("create_database", run_name="__main__")
 
-    assert connect_calls == [
-        {"dbname": "postgres", "user": "postgres", "connect_timeout": 5},
-        {"dbname": "applicant_db", "user": "postgres", "connect_timeout": 5},
-    ]
+    assert connect_calls[0]["dbname"] == "postgres"
+    assert connect_calls[0]["user"] == "postgres"
+    assert connect_calls[0]["connect_timeout"] == 5
+    assert connect_calls[1]["dbname"] == "applicant_db"
+    assert connect_calls[1]["user"] == "postgres"
+    assert connect_calls[1]["connect_timeout"] == 5
 
     assert first_conn.autocommit is True
     assert first_conn.closed is True

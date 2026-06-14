@@ -262,7 +262,8 @@ def test_load_json_to_postgres_executes_create_delete_insert_and_index(monkeypat
     execute_sql = "\n".join(query for query, _ in connection.cursor_obj.execute_calls)
     assert "CREATE TABLE IF NOT EXISTS applicants_test" in execute_sql
     assert "DELETE FROM applicants_test WHERE date_added = %s" in execute_sql
-    assert "CREATE UNIQUE INDEX IF NOT EXISTS applicants_test_uniq_idx" in execute_sql
+    assert "CREATE UNIQUE INDEX IF NOT EXISTS applicants_test_url_uniq_idx" in execute_sql
+    assert "ON CONFLICT (url) DO NOTHING" in insert_sql
 
     delete_call = next(params for query, params in connection.cursor_obj.execute_calls if "DELETE FROM applicants_test" in query)
     assert str(delete_call[0]) == "2026-01-16"

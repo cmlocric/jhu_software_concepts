@@ -3,13 +3,12 @@
 #"/c/Program Files/PostgreSQL/18/bin/psql.exe" -U postgres -h localhost -d applicant_db
 
 import subprocess
-import psycopg
 import os
 
-PG_CTL = r"C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe"
-PG_DATA = r"C:\PostgreSQL\18\data"
+from db_config import connect, DEFAULT_DBNAME
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
+PG_CTL = os.environ.get("PG_CTL", r"C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe")
+PG_DATA = os.environ.get("PGDATA", r"C:\PostgreSQL\18\data")
 
 def start_postgres():
     """Start the local PostgreSQL server if it is not already running.
@@ -51,14 +50,10 @@ def start_postgres():
     print("PostgreSQL server started.")
 
 if __name__ == "__main__":
-    DB_NAME = "applicant_db"
+    DB_NAME = DEFAULT_DBNAME
     start_postgres()
-    
-    connection = psycopg.connect(conninfo=DATABASE_URL) if DATABASE_URL else psycopg.connect(
-    dbname="postgres",
-    user="postgres",
-    connect_timeout=5,
-    )
+
+    connection = connect(dbname="postgres", connect_timeout=5)
     
     connection.autocommit = True
 
@@ -74,11 +69,7 @@ if __name__ == "__main__":
 
     connection.close()
 
-    connection = psycopg.connect(
-        dbname=DB_NAME,
-        user="postgres",
-        connect_timeout=5,
-    )
+    connection = connect(dbname=DB_NAME, connect_timeout=5)
 
     with connection.cursor() as cur:
         cur.execute("SHOW server_encoding;")

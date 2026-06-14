@@ -1,29 +1,19 @@
 import psycopg
 from decimal import Decimal
 
-import os
+from db_config import connect, get_database_url
 
-def get_database_url():
-    """Return the ``DATABASE_URL`` environment variable if set.
-
-    :returns: PostgreSQL connection URL, or ``None`` if unset.
-    :rtype: str | None
-    """
-    return os.environ.get("DATABASE_URL")
 
 def get_connection():
     """Open a connection to the applicant database.
 
-    Uses ``DATABASE_URL`` when available; otherwise connects to the local
-    ``applicant_db`` database as ``postgres``.
+    Uses environment-based connection settings via ``db_config``.
 
     :returns: Active psycopg connection.
     :rtype: psycopg.Connection
     """
-    database_url = get_database_url()
-    if database_url:
-        return psycopg.connect(conninfo=database_url)
-    return psycopg.connect(user="postgres", dbname="applicant_db")
+    return connect()
+
 
 def convert_decimal(value):
     """Convert PostgreSQL ``Decimal`` values to ``float`` for display.
@@ -121,9 +111,13 @@ question_query_dict = {
 
     """SELECT 'JHU MS in Computer Science', COUNT(*) 
         FROM public.applicants
-        WHERE program ILIKE '%Johns Hopkins University%' 
-            AND degree ILIKE '%Masters%' 
-            AND program ILIKE '%Computer Science%';""",
+        WHERE degree ILIKE '%Masters%'
+            AND program ILIKE '%Computer Science%'
+            AND (
+                program ILIKE '%Johns Hopkins University%'
+                OR program ILIKE '%Johns Hopkins %'
+                OR program ILIKE '%JHU%'
+            );""",
 
      #Question/Query 8
      '8) How many entries from 2026 are acceptances from applicants who applied to Georgetown University, MIT, Stanford University, or Carnegie Mellon University for a PhD in Computer Science?':

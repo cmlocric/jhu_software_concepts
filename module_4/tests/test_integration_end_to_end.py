@@ -99,7 +99,7 @@ def managed_test_table(db_connection, test_table_name):
                 program text,
                 comments text,
                 date_added date,
-                url text,
+                url text UNIQUE,
                 status text,
                 term text,
                 us_or_international text,
@@ -117,15 +117,8 @@ def managed_test_table(db_connection, test_table_name):
 
         cur.execute(
             f"""
-            CREATE UNIQUE INDEX IF NOT EXISTS {test_table_name}_uniq_idx
-            ON {test_table_name} (
-                program,
-                date_added,
-                url,
-                status,
-                term,
-                degree
-            )
+            CREATE UNIQUE INDEX IF NOT EXISTS {test_table_name}_url_uniq_idx
+            ON {test_table_name} (url)
             """
         )
 
@@ -416,12 +409,15 @@ def _install_end_to_end_fakes(app_module, monkeypatch, test_table, scrape_batche
     )
 
     monkeypatch.setattr(
-    app_module,
-    "get_db_connection",
-    lambda dbname, user: (
-        psycopg.connect(conninfo=os.environ["DATABASE_URL"])
-        if os.environ.get("DATABASE_URL")
-        else psycopg.connect(dbname="applicant_db", user="postgres")
+        app_module,
+        "get_db_connection",
+        lambda dbname=None, user=None: (
+            psycopg.connect(conninfo=os.environ["DATABASE_URL"])
+            if os.environ.get("DATABASE_URL")
+            else psycopg.connect(
+                dbname=dbname or "applicant_db",
+                user=user or "postgres",
+            )
         ),
     )
 

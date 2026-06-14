@@ -60,7 +60,7 @@ def client(app_module, monkeypatch):
     monkeypatch.setattr(
         app_module,
         "get_db_connection",
-        lambda dbname, user: DummyConnection(),
+        lambda: DummyConnection(),
     )
 
     monkeypatch.setattr(

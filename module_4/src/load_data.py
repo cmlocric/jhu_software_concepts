@@ -8,35 +8,12 @@ import argparse
 import json
 from datetime import datetime
 from pathlib import Path
-import os
 import psycopg
 
-# DB connection parameters
-DB_CONFIG = {
-    "host": "localhost",
-    "port": 5432,
-    "dbname": "applicant_db",
-    "user": "postgres"
-}
+from db_config import get_connect_kwargs
 
-def get_db_config():
-    """Return database connection settings from the environment or defaults.
-
-    :returns: ``DATABASE_URL`` connection string if set, otherwise the
-        ``DB_CONFIG`` dictionary.
-    :rtype: str | dict
-    """
-    database_url = os.environ.get("DATABASE_URL")
-    if database_url:
-        return database_url
-    return DB_CONFIG
-
-# File path and table name
-DEFAULT_JSON_FILE = (r"C:\Users\hz98yb\Training_Files\jhu_software_concepts\module_3\json_files\applicant_data_updated_cleaned.json")
-
-#Original Load
-#DEFAULT_JSON_FILE = (r"C:\Users\hz98yb\Training_Files\jhu_software_concepts\module_3\module_2\json_files\llm_extend_applicant_data_run.jsonl")
-
+SRC_DIR = Path(__file__).resolve().parent
+DEFAULT_JSON_FILE = str(SRC_DIR / "json_files" / "applicant_data_updated_cleaned.json")
 DEFAULT_TABLE_NAME = "applicants"
 
 def clean_obj(obj):
@@ -202,11 +179,8 @@ def load_json_to_postgres(
     limit = len(data)
     data = data[:limit]
 
-    db_target = get_db_config()
-    if isinstance(db_target, str):
-        connection_ctx = psycopg.connect(conninfo=db_target)
-    else:
-        connection_ctx = psycopg.connect(**db_target)
+    db_target = get_connect_kwargs()
+    connection_ctx = psycopg.connect(**db_target)
 
     with connection_ctx as connection:
         with connection.cursor() as cur:
@@ -216,7 +190,7 @@ def load_json_to_postgres(
                     program text,
                     comments text,
                     date_added date,
-                    url text,
+                    url text UNIQUE,
                     status text,
                     term text,
                     us_or_international text,
@@ -229,6 +203,11 @@ def load_json_to_postgres(
                     llm_generated_university text,
                     loaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
+            """)
+
+            cur.execute(f"""
+                CREATE UNIQUE INDEX IF NOT EXISTS {table_name}_url_uniq_idx
+                ON {table_name} (url)
             """)
 
             if delete_date:
@@ -280,19 +259,10 @@ def load_json_to_postgres(
                     llm_generated_university
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT DO NOTHING
+                ON CONFLICT (url) DO NOTHING
                 """,
                 rows_to_insert
             )
-          # Used to identify duplicate records
-            cur.execute(f"""CREATE UNIQUE INDEX IF NOT EXISTS {table_name}_uniq_idx
-                ON {table_name} (
-                program,
-                date_added,
-                url,
-                status,
-                term,
-                degree) """)            
                 
         connection.commit()
 
